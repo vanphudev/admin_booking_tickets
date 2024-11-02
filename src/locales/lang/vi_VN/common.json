@@ -1,0 +1,19 @@
+{
+   "common": {
+      "okText": "Xác nhận",
+      "closeText": "Đóng",
+      "cancelText": "Hủy bỏ",
+      "loadingText": "Đang tải...",
+      "saveText": "Lưu",
+      "delText": "Xóa",
+      "resetText": "Thiết lập lại",
+      "searchText": "Tìm kiếm",
+      "queryText": "Truy vấn",
+      "inputText": "Vui lòng nhập",
+      "chooseText": "Vui lòng chọn",
+      "redo": "Làm mới",
+      "back": "Quay lại",
+      "light": "Chủ đề sáng",
+      "dark": "Chủ đề tối"
+   }
+}
