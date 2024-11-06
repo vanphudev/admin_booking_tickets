@@ -123,11 +123,11 @@ export default function SearchBar() {
    return (
       <>
          <div className="flex items-center justify-center">
-            <IconButton className="h-8 rounded-xl bg-hover py-2 text-xs font-bold" onClick={handleOpen}>
+            <IconButton className="h-8 rounded-md bg-hover py-2 text-xs font-bold" onClick={handleOpen}>
                <div className="flex items-center justify-center gap-2">
                   <SvgIcon icon="ic-search" size="20" />
-                  <span className="flex h-6 items-center justify-center rounded-md bg-[#fff] px-1.5 font-bold text-gray-800">
-                     {'Tìm kiếm  '}
+                  <span className="flex h-6 items-center justify-start rounded-md px-3 font-bold text-gray-800">
+                     {t('common.searchText')}
                   </span>
                </div>
             </IconButton>
@@ -152,7 +152,7 @@ export default function SearchBar() {
                   ref={inputRef}
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search..."
+                  placeholder={t('common.searchText')}
                   variant="borderless"
                   autoFocus
                   prefix={<SvgIcon icon="ic-search" size="20" />}
@@ -168,15 +168,15 @@ export default function SearchBar() {
                   <div className="flex">
                      <ProTag color="cyan">↑</ProTag>
                      <ProTag color="cyan">↓</ProTag>
-                     <span>to navigate</span>
+                     <span>{t('common.toNavigate')}</span>
                   </div>
                   <div className="flex">
                      <ProTag color="cyan">↵</ProTag>
-                     <span>to select</span>
+                     <span>{t('common.toSelect')}</span>
                   </div>
                   <div className="flex">
                      <ProTag color="cyan">ESC</ProTag>
-                     <span>to close</span>
+                     <span>{t('common.toClose')}</span>
                   </div>
                </div>
             }

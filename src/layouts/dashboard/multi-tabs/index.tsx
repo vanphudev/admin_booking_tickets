@@ -160,9 +160,6 @@ export default function MultiTabs({ offsetTop = false }: Props) {
       }
    };
 
-   /**
-    * tab样式
-    */
    const calcTabStyle: (tab: KeepAliveTab) => CSSProperties = useCallback(
       (tab) => {
          const isActive = tab.key === activeTabRoutePath || tab.key === hoveringTabKey;
@@ -185,9 +182,6 @@ export default function MultiTabs({ offsetTop = false }: Props) {
       [activeTabRoutePath, hoveringTabKey, themeToken],
    );
 
-   /**
-    * 渲染单个tab
-    */
    const renderTabLabel = useCallback(
       (tab: KeepAliveTab) => {
          if (tab.hideTab) return null;
@@ -349,9 +343,6 @@ export default function MultiTabs({ offsetTop = false }: Props) {
       }
    }, [activeTabRoutePath, tabs]);
 
-   /**
-    * scrollContainer 监听wheel事件
-    */
    useEffect(() => {
       function handleMouseWheel(event: WheelEvent) {
          event.preventDefault();

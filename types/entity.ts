@@ -6,14 +6,14 @@ export interface UserToken {
 }
 
 export interface UserInfo {
-   id: string;
-   email: string;
-   username: string;
-   password?: string;
-   avatar?: string;
-   role?: Role;
-   status?: BasicStatus;
-   permissions?: Permission[];
+   userId: string;
+   email?: string;
+   phone?: string;
+   fullName?: JSON;
+   gender?: string;
+   birthday?: string;
+   username?: string;
+   profileImage?: string;
 }
 
 export interface Organization {
@@ -40,6 +40,7 @@ export interface Permission {
    hideTab?: boolean;
    frameSrc?: string;
    newFeature?: boolean;
+   iconNewFeature?: string;
    children?: Permission[];
 }
 

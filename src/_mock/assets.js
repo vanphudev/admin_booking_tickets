@@ -2,9 +2,6 @@ import { faker } from '@faker-js/faker';
 
 import { BasicStatus, PermissionType } from '#/enum';
 
-/**
- * Organization data mock
- */
 export const ORG_LIST = [
    {
       id: '1',
@@ -31,14 +28,12 @@ export const ORG_LIST = [
       ],
    },
 ];
+////
 
-/**
- * User permission mock
- */
 const DASHBOARD_PERMISSION = {
-   id: '9100714781927703',
+   id: '10001',
    parentId: '',
-   label: 'sys.menu.dashboard',
+   label: 'sys.menu.dashboard.index',
    name: 'Dashboard',
    icon: 'ic-analysis',
    type: PermissionType.CATALOGUE,
@@ -46,18 +41,18 @@ const DASHBOARD_PERMISSION = {
    order: 1,
    children: [
       {
-         id: '8426999229400979',
-         parentId: '9100714781927703',
-         label: 'sys.menu.workbench',
+         id: '100011',
+         parentId: '10001',
+         label: 'sys.menu.dashboard.workbench',
          name: 'Workbench',
          type: PermissionType.MENU,
          route: 'workbench',
          component: '/dashboard/workbench/index.tsx',
       },
       {
-         id: '9710971640510357',
-         parentId: '9100714781927703',
-         label: 'sys.menu.analysis',
+         id: '100012',
+         parentId: '10001',
+         label: 'sys.menu.dashboard.analysis',
          name: 'Analysis',
          type: PermissionType.MENU,
          route: 'analysis',
@@ -66,9 +61,9 @@ const DASHBOARD_PERMISSION = {
    ],
 };
 const MANAGEMENT_PERMISSION = {
-   id: '0901673425580518',
+   id: '10002',
    parentId: '',
-   label: 'sys.menu.management',
+   label: 'sys.menu.management.index',
    name: 'Management',
    icon: 'ic-management',
    type: PermissionType.CATALOGUE,
@@ -76,91 +71,350 @@ const MANAGEMENT_PERMISSION = {
    order: 2,
    children: [
       {
-         id: '2781684678535711',
-         parentId: '0901673425580518',
-         label: 'sys.menu.user.index',
-         name: 'User',
-         type: PermissionType.CATALOGUE,
-         route: 'user',
-         children: [
-            {
-               id: '4754063958766648',
-               parentId: '2781684678535711',
-               label: 'sys.menu.user.profile',
-               name: 'Profile',
-               type: PermissionType.MENU,
-               route: 'profile',
-               component: '/management/user/profile/index.tsx',
-            },
-            {
-               id: '2516598794787938',
-               parentId: '2781684678535711',
-               label: 'sys.menu.user.account',
-               name: 'Account',
-               type: PermissionType.MENU,
-               route: 'account',
-               component: '/management/user/account/index.tsx',
-            },
-         ],
+         id: '100021',
+         parentId: '10002',
+         label: 'sys.menu.management.office',
+         name: 'Office',
+         type: PermissionType.MENU,
+         route: 'office',
+         component: '/management/office/index.tsx',
       },
       {
-         id: '0249937641030250',
-         parentId: '0901673425580518',
-         label: 'sys.menu.system.index',
-         name: 'System',
+         id: '100022',
+         parentId: '10002',
+         label: 'sys.menu.management.vehicle',
+         name: 'Vehicles',
+         type: PermissionType.MENU,
+         route: 'vehicle',
+         component: '/management/vehicle/index.tsx',
+      },
+      {
+         id: '100023',
+         parentId: '10002',
+         label: 'sys.menu.management.methodPayment',
+         name: 'Methods Payment',
+         type: PermissionType.MENU,
+         route: 'method-payment',
+         component: '/management/method-payment/index.tsx',
+      },
+      {
+         id: '100024',
+         parentId: '10002',
+         label: 'sys.menu.management.driver',
+         name: 'Driver',
+         type: PermissionType.MENU,
+         route: 'driver',
+         component: '/management/driver/index.tsx',
+      },
+      {
+         id: '100025',
+         parentId: '10002',
+         label: 'sys.menu.management.voucher',
+         name: 'Voucher',
+         type: PermissionType.MENU,
+         route: 'voucher',
+         component: '/management/voucher/index.tsx',
+      },
+      {
+         id: '100026',
+         parentId: '10002',
+         label: 'sys.menu.management.review',
+         name: 'Review',
+         type: PermissionType.MENU,
+         route: 'review',
+         component: '/management/review/index.tsx',
+      },
+      {
+         id: '100027',
+         parentId: '10002',
+         label: 'sys.menu.management.article',
+         name: 'Article',
+         type: PermissionType.MENU,
+         route: 'article',
+         component: '/management/article/index.tsx',
+      },
+   ],
+};
+const USERS_PERMISSION = {
+   id: '10003',
+   parentId: '',
+   label: 'sys.menu.users.index',
+   name: 'Users',
+   icon: 'heroicons:user-group-solid',
+   type: PermissionType.CATALOGUE,
+   route: 'users',
+   order: 3,
+   children: [
+      {
+         id: '100031',
+         parentId: '10003',
+         label: 'sys.menu.users.customer',
+         name: 'Customers',
+         type: PermissionType.MENU,
+         route: 'customer',
+         component: '/users/customer/index.tsx',
+      },
+      {
+         id: '100032',
+         parentId: '10003',
+         label: 'sys.menu.users.employee',
+         name: 'Employee',
+         type: PermissionType.MENU,
+         route: 'employee',
+         component: '/users/employee/index.tsx',
+      },
+      {
+         id: '100033',
+         parentId: '10003',
+         label: 'sys.menu.users.permission.index',
+         name: 'Permission',
          type: PermissionType.CATALOGUE,
-         route: 'system',
+         route: 'permission',
          children: [
             {
-               id: '1985890042972842',
-               parentId: '0249937641030250',
-               label: 'sys.menu.system.organization',
-               name: 'Organization',
-               type: PermissionType.MENU,
-               route: 'organization',
-               component: '/management/system/organization/index.tsx',
-            },
-            {
-               id: '4359580910369984',
-               parentId: '0249937641030250',
-               label: 'sys.menu.system.permission',
-               name: 'Permission',
-               type: PermissionType.MENU,
-               route: 'permission',
-               component: '/management/system/permission/index.tsx',
-            },
-            {
-               id: '1689241785490759',
-               parentId: '0249937641030250',
-               label: 'sys.menu.system.role',
+               id: '1000331',
+               parentId: '100033',
+               label: 'sys.menu.users.permission.role',
                name: 'Role',
                type: PermissionType.MENU,
                route: 'role',
-               component: '/management/system/role/index.tsx',
+               component: '/users/permission/role/index.tsx',
             },
             {
-               id: '0157880245365433',
-               parentId: '0249937641030250',
-               label: 'sys.menu.system.user',
-               name: 'User',
+               id: '1000332',
+               parentId: '100033',
+               label: 'sys.menu.users.permission.group',
+               name: 'Group',
                type: PermissionType.MENU,
-               route: 'user',
-               component: '/management/system/user/index.tsx',
+               route: 'group',
+               component: '/users/permission/group/index.tsx',
             },
             {
-               id: '0157880245365434',
-               parentId: '0249937641030250',
-               label: 'sys.menu.system.user_detail',
-               name: 'User Detail',
+               id: '1000333',
+               parentId: '100033',
+               label: 'sys.menu.users.permission.grant-role',
+               name: 'Grant Role',
                type: PermissionType.MENU,
-               route: 'user/:id',
-               component: '/management/system/user/detail.tsx',
-               hide: true,
+               route: 'grant-role',
+               component: '/users/permission/grant-role/index.tsx',
             },
          ],
       },
    ],
 };
+const ROUTES_PERMISSION = {
+   id: '10004',
+   parentId: '',
+   label: 'sys.menu.routes.index',
+   name: 'Routes',
+   icon: 'gis:map-route',
+   type: PermissionType.CATALOGUE,
+   route: 'routes',
+   order: 4,
+   children: [
+      {
+         id: '100041',
+         parentId: '10004',
+         label: 'sys.menu.routes.route',
+         name: 'Route',
+         type: PermissionType.MENU,
+         route: 'route',
+         component: '/routes/route/index.tsx',
+      },
+      {
+         id: '100042',
+         parentId: '10004',
+         label: 'sys.menu.routes.trip',
+         name: 'Trip',
+         type: PermissionType.MENU,
+         route: 'trip',
+         component: '/routes/trip/index.tsx',
+      },
+   ],
+};
+const REPORTS_PERMISSION = {
+   id: '10005',
+   parentId: '',
+   label: 'sys.menu.reports.index',
+   name: 'Reports',
+   icon: 'mdi:report-areaspline',
+   type: PermissionType.CATALOGUE,
+   route: 'reports',
+   order: 5,
+   children: [
+      {
+         id: '100051',
+         parentId: '10005',
+         label: 'sys.menu.reports.customer',
+         name: 'Customer',
+         type: PermissionType.MENU,
+         route: 'customer',
+         component: '/reports/customer/index.tsx',
+      },
+      {
+         id: '100052',
+         parentId: '10005',
+         label: 'sys.menu.reports.employee',
+         name: 'Employee',
+         type: PermissionType.MENU,
+         route: 'employee',
+         component: '/reports/employee/index.tsx',
+      },
+      {
+         id: '100053',
+         parentId: '10005',
+         label: 'sys.menu.reports.by-employee',
+         name: 'By Employee',
+         type: PermissionType.MENU,
+         route: 'by-employee',
+         component: '/reports/by-employee/index.tsx',
+      },
+      {
+         id: '100054',
+         parentId: '10005',
+         label: 'sys.menu.reports.booking',
+         name: 'Booking',
+         type: PermissionType.MENU,
+         route: 'booking',
+         component: '/reports/booking/index.tsx',
+      },
+      {
+         id: '100055',
+         parentId: '10005',
+         label: 'sys.menu.reports.today',
+         name: 'Today',
+         type: PermissionType.MENU,
+         route: 'today',
+         component: '/reports/today/index.tsx',
+      },
+   ],
+};
+const SYSTEM_PERMISSION = {
+   id: '10006',
+   parentId: '',
+   label: 'sys.menu.system.index',
+   name: 'System',
+   icon: 'solar:database-bold-duotone',
+   type: PermissionType.CATALOGUE,
+   route: 'system',
+   order: 6,
+   children: [
+      {
+         id: '100061',
+         parentId: '10006',
+         label: 'sys.menu.system.backup',
+         name: 'Backup',
+         type: PermissionType.MENU,
+         route: 'backup',
+         component: '/system/backup/index.tsx',
+      },
+      {
+         id: '100062',
+         parentId: '10006',
+         label: 'sys.menu.system.restore',
+         name: 'Restore',
+         type: PermissionType.MENU,
+         route: 'restore',
+         component: '/system/restore/index.tsx',
+      },
+      {
+         id: '100063',
+         parentId: '10006',
+         label: 'sys.menu.system.setting',
+         name: 'Setting',
+         type: PermissionType.MENU,
+         route: 'setting',
+         component: '/system/setting/index.tsx',
+      },
+   ],
+};
+const TICKETS_PERMISSION = {
+   id: '10007',
+   parentId: '',
+   label: 'sys.menu.ticket.index',
+   name: 'All Tickets',
+   icon: 'dashicons:tickets-alt',
+   type: PermissionType.MENU,
+   newFeature: true,
+   iconNewFeature: 'emojione:admission-tickets',
+   route: 'ticket',
+   order: 7,
+   component: '/ticket/index.tsx',
+};
+const BOOKING_PERMISSION = {
+   id: '10008',
+   parentId: '',
+   label: 'sys.menu.bookings.index',
+   name: 'Bookings',
+   icon: 'tabler:brand-booking',
+   type: PermissionType.CATALOGUE,
+   route: 'bookings',
+   order: 8,
+   children: [
+      {
+         id: '100081',
+         parentId: '10008',
+         label: 'sys.menu.bookings.booking',
+         name: 'Booking',
+         type: PermissionType.MENU,
+         route: 'booking',
+         component: '/bookings/booking/index.tsx',
+      },
+      {
+         id: '100082',
+         parentId: '10008',
+         label: 'sys.menu.bookings.cancel',
+         name: 'Cancel Ticket',
+         type: PermissionType.MENU,
+         route: 'cancel',
+         component: '/bookings/cancel/index.tsx',
+      },
+      {
+         id: '100083',
+         parentId: '10008',
+         label: 'sys.menu.bookings.history',
+         name: 'History',
+         type: PermissionType.MENU,
+         route: 'history',
+         component: '/bookings/history/index.tsx',
+      },
+   ],
+};
+const INFORMATION_PERMISSION = {
+   id: '10009',
+   parentId: '',
+   label: 'sys.menu.information.index',
+   name: 'Information',
+   icon: 'fa-solid:user-edit',
+   type: PermissionType.CATALOGUE,
+   route: 'information',
+   order: 9,
+   children: [
+      {
+         id: '100091',
+         parentId: '10009',
+         label: 'sys.menu.information.profile',
+         name: 'Profile',
+         type: PermissionType.MENU,
+         route: 'profile',
+         component: '/information/profile/index.tsx',
+      },
+      {
+         id: '100092',
+         parentId: '10009',
+         label: 'sys.menu.information.logout',
+         name: 'Logout',
+         type: PermissionType.MENU,
+         route: 'logout',
+         newFeature: true,
+         iconNewFeature: 'uim:signout',
+         component: '/information/logout/index.tsx',
+      },
+   ],
+};
+
+////
+
 const COMPONENTS_PERMISSION = {
    id: '2271615060673773',
    parentId: '',
@@ -472,16 +726,25 @@ const OTHERS_PERMISSION = [
 export const PERMISSION_LIST = [
    DASHBOARD_PERMISSION,
    MANAGEMENT_PERMISSION,
-   COMPONENTS_PERMISSION,
-   FUNCTIONS_PERMISSION,
-   MENU_LEVEL_PERMISSION,
-   ERRORS_PERMISSION,
-   ...OTHERS_PERMISSION,
+   INFORMATION_PERMISSION,
+   BOOKING_PERMISSION,
+   TICKETS_PERMISSION,
+   REPORTS_PERMISSION,
+   SYSTEM_PERMISSION,
+   ROUTES_PERMISSION,
+   USERS_PERMISSION,
 ];
 
-/**
- * User role mock
- */
+// export const PERMISSION_LIST = [
+//    DASHBOARD_PERMISSION,
+//    MANAGEMENT_PERMISSION,
+//    COMPONENTS_PERMISSION,
+//    FUNCTIONS_PERMISSION,
+//    MENU_LEVEL_PERMISSION,
+//    ERRORS_PERMISSION,
+//    ...OTHERS_PERMISSION,
+// ];
+
 const ADMIN_ROLE = {
    id: '4281707933534332',
    name: 'Admin',
@@ -500,11 +763,9 @@ const TEST_ROLE = {
    desc: 'test',
    permission: [DASHBOARD_PERMISSION, COMPONENTS_PERMISSION, FUNCTIONS_PERMISSION],
 };
+
 export const ROLE_LIST = [ADMIN_ROLE, TEST_ROLE];
 
-/**
- * User data mock
- */
 export const DEFAULT_USER = {
    id: 'b34719e1-ce46-457e-9575-99505ecee828',
    username: 'admin',
@@ -527,4 +788,5 @@ export const TEST_USER = {
    role: TEST_ROLE,
    permissions: TEST_ROLE.permission,
 };
+
 export const USER_LIST = [DEFAULT_USER, TEST_USER];

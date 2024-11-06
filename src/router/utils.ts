@@ -13,6 +13,7 @@ export const menuFilter = (items: AppRouteObject[]) => {
       })
       .sort(ascend((item) => item.order || Infinity));
 };
+
 export function getRoutesFromModules() {
    const menuModules: AppRouteObject[] = [];
    const modules = import.meta.glob('./routes/modules/**/*.tsx', { eager: true });
@@ -23,6 +24,7 @@ export function getRoutesFromModules() {
    });
    return menuModules;
 }
+
 export function getMenuRoutes(appRouteObjects: AppRouteObject[]) {
    return menuFilter(appRouteObjects);
 }

@@ -10,6 +10,7 @@ export interface SignInReq {
 export interface SignUpReq extends SignInReq {
    email: string;
 }
+
 export type SignInRes = UserToken & { user: UserInfo };
 
 export enum UserApi {

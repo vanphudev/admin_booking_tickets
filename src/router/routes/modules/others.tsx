@@ -15,6 +15,7 @@ const Kanban = lazy(() => import('@/pages/sys/others/kanban'));
 function Wrapper({ children }: any) {
    return <Suspense fallback={<CircleLoading />}>{children}</Suspense>;
 }
+
 const others: AppRouteObject[] = [
    {
       path: 'calendar',
