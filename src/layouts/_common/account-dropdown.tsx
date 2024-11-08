@@ -1,92 +1,109 @@
-import { Divider, MenuProps } from 'antd';
+import { App, Divider, MenuProps } from 'antd';
 import Dropdown, { DropdownProps } from 'antd/es/dropdown/dropdown';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink } from 'react-router-dom';
+import { useSelector } from 'react-redux';
+import { NavLink, useNavigate } from 'react-router-dom';
 
 import { IconButton } from '@/components/icon';
 import { useLoginStateContext } from '@/pages/sys/login/providers/LoginStateProvider';
+import authAPI from '@/redux/api/services/authAPI';
+import { RootState } from '@/redux/stores/store';
 import { useRouter } from '@/router/hooks';
-import { useUserInfo, useUserActions } from '@/store/userStore';
 import { useThemeToken } from '@/theme/hooks';
 
 const { VITE_APP_HOMEPAGE: HOMEPAGE } = import.meta.env;
 
-/**
- * Account Dropdown
- */
+const defaultAvatar =
+   'https://res.cloudinary.com/dkhkjaual/image/upload/c_thumb,w_200,g_face/v1730884221/3D_Fashion_Little_Boy_Avatar_xrfnct.png';
+
 export default function AccountDropdown() {
-  const { replace } = useRouter();
-  const { username, email, avatar } = useUserInfo();
-  const { clearUserInfoAndToken } = useUserActions();
-  const { backToLogin } = useLoginStateContext();
-  const { t } = useTranslation();
-  const logout = () => {
-    try {
-      // todo const logoutMutation = useMutation(userService.logout);
-      // todo logoutMutation.mutateAsync();
-      clearUserInfoAndToken();
-      backToLogin();
-    } catch (error) {
-      console.log(error);
-    } finally {
-      replace('/login');
-    }
-  };
-  const { colorBgElevated, borderRadiusLG, boxShadowSecondary } = useThemeToken();
+   const { notification } = App.useApp();
+   const { replace } = useRouter();
+   const [fullName, setFullName] = useState<string | undefined>(undefined);
+   const [email, setEmail] = useState<string | undefined>(undefined);
+   const [profileImage, setProfileImage] = useState<string | undefined>(undefined);
 
-  const contentStyle: React.CSSProperties = {
-    backgroundColor: colorBgElevated,
-    borderRadius: borderRadiusLG,
-    boxShadow: boxShadowSecondary,
-  };
+   const userInfo = useSelector((state: RootState) => state.user.userInfo);
 
-  const menuStyle: React.CSSProperties = {
-    boxShadow: 'none',
-  };
+   const { backToLogin } = useLoginStateContext();
+   const { t } = useTranslation();
+   const signOut = authAPI.logout;
+   const logout = async () => {
+      try {
+         const res = await signOut();
+         if (res.status === 200) {
+            backToLogin();
+            replace('/login');
+            notification.success({
+               message: 'Logout success!',
+               duration: 3,
+            });
+         } else {
+            notification.error({
+               message: 'Logout failed!',
+               duration: 3,
+            });
+         }
+      } catch (error) {
+         notification.error({
+            message: 'Logout failed!',
+            duration: 3,
+         });
+      }
+   };
+   const { colorBgElevated, borderRadiusLG, boxShadowSecondary } = useThemeToken();
 
-  const dropdownRender: DropdownProps['dropdownRender'] = (menu) => (
-    <div style={contentStyle}>
-      <div className="flex flex-col items-start p-4">
-        <div>{username}</div>
-        <div className="text-gray">{email}</div>
+   const contentStyle: React.CSSProperties = {
+      backgroundColor: colorBgElevated,
+      borderRadius: borderRadiusLG,
+      boxShadow: boxShadowSecondary,
+   };
+
+   const menuStyle: React.CSSProperties = {
+      boxShadow: 'none',
+   };
+
+   useEffect(() => {
+      setEmail(userInfo.email);
+      setProfileImage(userInfo.profileImage);
+      setFullName(userInfo.fullName?.toString());
+   }, [userInfo]);
+
+   const dropdownRender: DropdownProps['dropdownRender'] = (menu) => (
+      <div style={contentStyle}>
+         <div className="flex flex-col items-start p-4">
+            <div>{fullName?.toString()}</div>
+            <div className="text-gray">{email?.toString()}</div>
+         </div>
+         <Divider style={{ margin: 0 }} />
+         {React.cloneElement(menu as React.ReactElement, { style: menuStyle })}
       </div>
-      <Divider style={{ margin: 0 }} />
-      {React.cloneElement(menu as React.ReactElement, { style: menuStyle })}
-    </div>
-  );
+   );
 
-  const items: MenuProps['items'] = [
-    {
-      label: (
-        <NavLink to="https://docs-admin.slashspaces.com/" target="_blank">
-          {t('sys.docs')}
-        </NavLink>
-      ),
-      key: '0',
-    },
-    { label: <NavLink to={HOMEPAGE}>{t('sys.menu.dashboard')}</NavLink>, key: '1' },
-    {
-      label: <NavLink to="/management/user/profile">{t('sys.menu.user.profile')}</NavLink>,
-      key: '2',
-    },
-    {
-      label: <NavLink to="/management/user/account">{t('sys.menu.user.account')}</NavLink>,
-      key: '3',
-    },
-    { type: 'divider' },
-    {
-      label: <button className="font-bold text-warning">{t('sys.login.logout')}</button>,
-      key: '4',
-      onClick: logout,
-    },
-  ];
+   const items: MenuProps['items'] = [
+      { label: <NavLink to={HOMEPAGE}>{t('sys.menu.dashboard.index')}</NavLink>, key: '1' },
+      {
+         label: <NavLink to="/information/profile">{t('sys.menu.information.profile')}</NavLink>,
+         key: '2',
+      },
+      { type: 'divider' },
+      {
+         label: <button className="font-bold text-warning">{t('sys.menu.information.logout')}</button>,
+         key: '3',
+         onClick: logout,
+      },
+   ];
 
-  return (
-    <Dropdown menu={{ items }} trigger={['click']} dropdownRender={dropdownRender}>
-      <IconButton className="h-10 w-10 transform-none px-0 hover:scale-105">
-        <img className="h-8 w-8 rounded-full" src={avatar} alt="" />
-      </IconButton>
-    </Dropdown>
-  );
+   return (
+      <Dropdown menu={{ items }} trigger={['click']} dropdownRender={dropdownRender}>
+         <IconButton className="h-10 w-10 transform-none px-0 hover:scale-105">
+            <img
+               className="h-8 w-8 rounded-full"
+               src={!profileImage ? defaultAvatar : profileImage}
+               alt={fullName?.toString() || ''}
+            />
+         </IconButton>
+      </Dropdown>
+   );
 }

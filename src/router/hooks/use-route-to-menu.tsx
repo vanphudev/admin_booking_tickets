@@ -10,9 +10,6 @@ import type { GetProp, MenuProps } from 'antd';
 
 type MenuItem = GetProp<MenuProps, 'items'>[number];
 
-/**
- *   routes -> menus
- */
 export function useRouteToMenuFn() {
    const { t } = useTranslation();
    const { themeLayout } = useSettings();

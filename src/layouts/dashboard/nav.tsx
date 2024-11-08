@@ -23,13 +23,12 @@ const slideInLeft = varSlide({ distance: 10 }).inLeft;
 type Props = {
    closeSideBarDrawer?: () => void;
 };
+
 export default function Nav(props: Props) {
    const navigate = useNavigate();
    const matches = useMatches();
    const { pathname } = useLocation();
-
    const { colorPrimary, colorTextBase, colorBgElevated, colorBorder } = useThemeToken();
-
    const settings = useSettings();
    const { themeLayout } = settings;
    const { setSettings } = useSettingActions();
@@ -115,7 +114,7 @@ export default function Nav(props: Props) {
                {themeLayout !== ThemeLayout.Mini && (
                   <m.div variants={slideInLeft}>
                      <span className="ml-2 text-xl font-bold" style={{ color: colorPrimary }}>
-                        Futabus Admin
+                        FUTA - Bus Lines
                      </span>
                   </m.div>
                )}
@@ -134,7 +133,6 @@ export default function Nav(props: Props) {
                height: 'calc(100vh - 70px)',
             }}
          >
-            {/* <!-- Sidebar Menu --> */}
             <Menu
                mode={menuMode}
                items={menuList}

@@ -15,7 +15,7 @@ const axiosInstance = axios.create({
 
 axiosInstance.interceptors.request.use(
    (config) => {
-      config.headers.Authorization = 'Bearer Token';
+      config.headers.Authorization = userStore.getState().userToken.accessToken;
       return config;
    },
    (error) => {
@@ -26,7 +26,6 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
    (res: AxiosResponse<Result>) => {
       if (!res.data) throw new Error(t('sys.api.apiRequestFailed'));
-
       const { status, data, message } = res.data;
       const hasSuccess = data && Reflect.has(res.data, 'status') && status === ResultEnum.SUCCESS;
       if (hasSuccess) {

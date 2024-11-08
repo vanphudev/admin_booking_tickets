@@ -7,4 +7,4 @@ import demoMockApi from './handlers/_demo';
 const handlers = [...userMockApi, ...orgMockApi, ...demoMockApi];
 const worker = setupWorker(...handlers);
 
-export default worker
+export default worker;

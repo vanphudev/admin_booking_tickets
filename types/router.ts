@@ -49,6 +49,7 @@ export interface RouteMeta {
     */
    params?: Params<string>;
 }
+
 export type AppRouteObject = {
    order?: number;
    meta?: RouteMeta;

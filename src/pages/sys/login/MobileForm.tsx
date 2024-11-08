@@ -32,10 +32,10 @@ function MobileForm() {
       <>
          <div className="mb-4 text-2xl font-bold xl:text-3xl">{t('sys.login.mobileSignInFormTitle')}</div>
          <Form name="normal_login" size="large" initialValues={{ remember: true }} onFinish={onFinish}>
-            <Form.Item name="phone" rules={[{ required: true, message: 'Please input your Phone!' }]}>
+            <Form.Item name="phone" rules={[{ required: true, message: t('sys.login.mobilePlaceholder') }]}>
                <Input placeholder={t('sys.login.mobile')} />
             </Form.Item>
-            <Form.Item name="code" rules={[{ required: true, message: t('sys.login.mobilePlaceholder') }]}>
+            <Form.Item name="code" rules={[{ required: true, message: t('sys.login.smsPlaceholder') }]}>
                <Row justify="space-between">
                   <Col span={14}>
                      <Input placeholder={t('sys.login.smsCode')} />

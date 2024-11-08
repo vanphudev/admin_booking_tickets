@@ -31,7 +31,7 @@
          "signUpFormTitle": "Đăng ký",
          "forgetFormTitle": "Đặt lại mật khẩu",
          "signInPrimaryTitle": "Chào mừng trở lại",
-         "signInSecondTitle": "Hệ thống quản lý trung tâm",
+         "signInSecondTitle": "FUTA Bus - Admin - Ứng dụng quản lý xe khách",
          "signInDesc": "Nhập thông tin cá nhân của bạn để bắt đầu sử dụng!",
          "policy": "Tôi đồng ý với chính sách bảo mật của xxx",
          "scanSign": "Quét mã và nhấp 'Xác nhận' để hoàn tất đăng nhập",
@@ -42,7 +42,7 @@
          "forgetPassword": "Quên mật khẩu?",
          "otherSignIn": "Đăng nhập bằng phương thức khác",
          "sendSmsButton": "Gửi mã xác nhận",
-         "sendSmsText": "{{second}} giây nữa có thể lấy lại",
+         "sendSmsText": "{{second}} giây nữa.",
          "sendEmailButton": "Gửi email",
          "loginSuccessTitle": "Đăng nhập thành công",
          "loginSuccessDesc": "Chào mừng trở lại",
@@ -75,22 +75,69 @@
          "closeRight": "Đóng các tab bên phải"
       },
       "menu": {
-         "dashboard": "Bảng điều khiển",
-         "workbench": "Bàn làm việc",
-         "analysis": "Phân tích",
-         "management": "Quản lý",
+         "dashboard": {
+            "index": "Bảng điều khiển",
+            "workbench": "Bàn làm việc",
+            "analysis": "Phân tích"
+         },
+         "management": {
+            "index": "Quản lý chung",
+            "office": "Văn phòng - Địa điểm",
+            "vehicle": "Xe khách",
+            "article": "Bài viết - Tin tức",
+            "methodPayment": "Phương thức thanh toán",
+            "review": "Đánh giá - Phản hồi",
+            "driver": "Tài xế",
+            "voucher": "Mã giảm giá"
+         },
+         "users": {
+            "index": "Quản lý người dùng",
+            "customer": "Khách hàng",
+            "employee": "Nhân viên",
+            "permission": {
+               "index": "Phân quyền",
+               "role": "Vai trò",
+               "group": "Nhóm",
+               "grant-role": "Gán vai trò"
+            }
+         },
+         "routes": {
+            "index": "Quản lý tuyến đường",
+            "route": "Tuyến đường",
+            "trip": "Chuyến đi"
+         },
+         "reports": {
+            "index": "Báo cáo - Thống kê",
+            "customer": "Thống kê khách hàng",
+            "employee": "Thống kê nhân viên",
+            "by-employee": "Thống kê theo nhân viên",
+            "booking": "Thống kê đặt vé",
+            "today": "Thống kê hôm nay"
+         },
+         "system": {
+            "index": "Quản lý hệ thống",
+            "backup": "Sao lưu",
+            "restore": "Khôi phục",
+            "setting": "Cài đặt"
+         },
+         "ticket": {
+            "index": "Vé xe khách"
+         },
+         "bookings": {
+            "index": "Đặt vé xe khách",
+            "booking": "Đặt vé",
+            "cancel": "Hủy vé",
+            "history": "Lịch sử đặt vé"
+         },
+         "information": {
+            "index": "Thông tin cá nhân",
+            "profile": "Hồ sơ cá nhân",
+            "logout": "Đăng xuất"
+         },
          "user": {
             "index": "Người dùng",
             "profile": "Hồ sơ",
             "account": "Tài khoản"
-         },
-         "system": {
-            "index": "Hệ thống",
-            "organization": "Tổ chức",
-            "permission": "Quyền",
-            "role": "Vai trò",
-            "user": "Người dùng",
-            "user_detail": "Chi tiết người dùng"
          },
          "blog": "Blog",
          "components": "Thành phần",

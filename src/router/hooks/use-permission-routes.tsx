@@ -4,9 +4,10 @@ import { Navigate, Outlet } from 'react-router-dom';
 
 import { Iconify } from '@/components/icon';
 import { CircleLoading } from '@/components/loading';
-import { useUserPermission } from '@/store/userStore';
 import ProTag from '@/theme/antd/components/tag';
 import { flattenTrees } from '@/utils/tree';
+
+import { PERMISSION_LIST } from '../../_mock/assets';
 
 import { Permission } from '#/entity';
 import { BasicStatus, PermissionType } from '#/enum';
@@ -14,6 +15,7 @@ import { AppRouteObject } from '#/router';
 
 const entryPath = '/src/pages';
 const pages = import.meta.glob('/src/pages/**/*.tsx');
+
 export const pagesSelect = Object.entries(pages).map(([path]) => {
    const pagePath = path.replace(entryPath, '');
    return {
@@ -21,21 +23,12 @@ export const pagesSelect = Object.entries(pages).map(([path]) => {
       value: pagePath,
    };
 });
-
 function resolveComponent(path: string) {
    return pages[`${entryPath}${path}`];
 }
 
-/**
- * return routes about permission
- */
 export function usePermissionRoutes() {
-   // return useMemo(() => {
-   //   return getRoutesFromModules();
-   // }, []);
-
-   const permissions = useUserPermission();
-
+   const permissions = PERMISSION_LIST as Permission[];
    return useMemo(() => {
       const flattenedPermissions = flattenTrees(permissions!);
       const permissionRoutes = transformPermissionToMenuRoutes(permissions || [], flattenedPermissions);
@@ -43,11 +36,6 @@ export function usePermissionRoutes() {
    }, [permissions]);
 }
 
-/**
- * transform Permission[] to  AppRouteObject[]
- * @param permissions
- * @param parent
- */
 function transformPermissionToMenuRoutes(permissions: Permission[], flattenedPermissions: Permission[]) {
    return permissions.map((permission) => {
       const {
@@ -63,6 +51,7 @@ function transformPermissionToMenuRoutes(permissions: Permission[], flattenedPer
          newFeature,
          component,
          parentId,
+         iconNewFeature,
          children = [],
       } = permission;
 
@@ -81,11 +70,12 @@ function transformPermissionToMenuRoutes(permissions: Permission[], flattenedPer
       if (icon) appRoute.meta!.icon = icon;
       if (frameSrc) appRoute.meta!.frameSrc = frameSrc;
 
-      if (newFeature) {
+      if (newFeature && iconNewFeature) {
          appRoute.meta!.suffix = (
-            <ProTag color="cyan" icon={<Iconify icon="solar:bell-bing-bold-duotone" size={14} />}>
-               NEW
-            </ProTag>
+            <ProTag
+               color="transparent"
+               icon={<Iconify style={{ color: '#db1f1f' }} icon={iconNewFeature} size={25} />}
+            />
          );
       }
 
@@ -123,13 +113,6 @@ function transformPermissionToMenuRoutes(permissions: Permission[], flattenedPer
    });
 }
 
-/**
- * Splicing from the root permission route to the current permission route
- * @param {Permission} permission - current permission
- * @param {Permission[]} flattenedPermissions - flattened permission array
- * @param {string} route - parent permission route
- * @returns {string} - The complete route after splicing
- */
 function getCompleteRoute(permission: Permission, flattenedPermissions: Permission[], route = '') {
    const currentRoute = route ? `/${permission.route}${route}` : `/${permission.route}`;
 

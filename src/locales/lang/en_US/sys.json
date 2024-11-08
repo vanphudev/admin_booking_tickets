@@ -31,7 +31,7 @@
          "signUpFormTitle": "Sign up",
          "forgetFormTitle": "Reset password",
          "signInPrimaryTitle": "Hi, Welcome Back",
-         "signInSecondTitle": "Backstage management system",
+         "signInSecondTitle": "FUTA Bus - Admin - Application for managing buses",
          "signInTitle": "",
          "signInDesc": "Enter your personal details and get started!",
          "policy": "I agree to the xxx Privacy Policy",
@@ -52,7 +52,7 @@
          "confirmPasswordPlaceholder": "Please input confirm password",
          "emaildPlaceholder": "Please input email",
          "smsPlaceholder": "Please input sms code",
-         "mobilePlaceholder": "Please input mobile",
+         "mobilePlaceholder": "Please input phone number",
          "policyPlaceholder": "Register after checking",
          "diffPwd": "The two passwords are inconsistent",
          "userName": "Username",
@@ -76,22 +76,69 @@
          "closeRight": "Close Right"
       },
       "menu": {
-         "dashboard": "Dashboard",
-         "workbench": "Workbench",
-         "analysis": "Analysis",
-         "management": "Management",
+         "dashboard": {
+            "index": "Dashboard",
+            "workbench": "Workbench",
+            "analysis": "Analysis"
+         },
+         "management": {
+            "index": "Management Common",
+            "office": "Office - Location",
+            "vehicle": "Bus",
+            "article": "Article - News",
+            "methodPayment": "Payment Method",
+            "review": "Review - Feedback",
+            "driver": "Driver",
+            "voucher": "Discount Code"
+         },
+         "users": {
+            "index": "User Management",
+            "customer": "Customer",
+            "employee": "Employee",
+            "permission": {
+               "index": "Permissions",
+               "role": "Role",
+               "group": "Group",
+               "grant-role": "Assign Role"
+            }
+         },
+         "routes": {
+            "index": "Route Management",
+            "route": "Route",
+            "trip": "Trip"
+         },
+         "reports": {
+            "index": "Reports - Statistics",
+            "customer": "Customer Statistics",
+            "employee": "Employee Statistics",
+            "by-employee": "Statistics by Employee",
+            "booking": "Booking Statistics",
+            "today": "Today’s Statistics"
+         },
+         "system": {
+            "index": "System Management",
+            "backup": "Backup",
+            "restore": "Restore",
+            "setting": "Settings"
+         },
+         "ticket": {
+            "index": "Bus Tickets"
+         },
+         "bookings": {
+            "index": "Bus Booking",
+            "booking": "Book Ticket",
+            "cancel": "Cancel Ticket",
+            "history": "Booking History"
+         },
+         "information": {
+            "index": "Personal Information",
+            "profile": "Profile",
+            "logout": "Logout"
+         },
          "user": {
             "index": "User",
             "profile": "Profile",
             "account": "Account"
-         },
-         "system": {
-            "index": "System",
-            "organization": "Organization",
-            "permission": "Permission",
-            "role": "Role",
-            "user": "User",
-            "user_detail": "User Detail"
          },
          "blog": "Blog",
          "components": "Components",

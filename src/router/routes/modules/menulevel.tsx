@@ -26,6 +26,10 @@ const menulevel: AppRouteObject = {
    },
    children: [
       {
+         index: true,
+         element: <Navigate to="menu_level_1a" replace />,
+      },
+      {
          path: 'menu_level_1a',
          element: <MenuLevel title="1a" />,
          meta: { label: 'sys.menu.menulevel.1a', key: '/menu_level/menu_level_1a' },
