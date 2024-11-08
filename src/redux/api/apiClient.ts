@@ -82,8 +82,11 @@ axiosInstance.interceptors.response.use(
          store.dispatch(clearUserInfoAndToken());
          removeItem(StorageEnum.UserInfo);
          removeItem(StorageEnum.UserToken);
-         const { replace } = useRouter();
-         replace('/login');
+         window.location.href = '/login';
+         return error;
+      }
+      if (status === 500) {
+         window.location.href = '/500';
          return error;
       }
       if (status === 419) {
@@ -101,8 +104,7 @@ axiosInstance.interceptors.response.use(
             store.dispatch(clearUserInfoAndToken());
             removeItem(StorageEnum.UserInfo);
             removeItem(StorageEnum.UserToken);
-            const { replace } = useRouter();
-            replace('/login');
+            window.location.href = '/login';
             return refreshError;
          }
       }

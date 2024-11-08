@@ -1,5 +1,3 @@
-import { useNavigate } from 'react-router-dom';
-
 import { setUserInfoAndToken, clearUserInfoAndToken } from '@/redux/slices/userSlice';
 import { store } from '@/redux/stores/store';
 import { setItem, removeItem } from '@/utils/storage';
@@ -57,6 +55,7 @@ const signin = (data: SignInReq) => {
          return res;
       })
       .catch((error) => {
+         window.location.reload();
          return error;
       });
 };
@@ -70,9 +69,11 @@ const logout = () => {
             removeItem(StorageEnum.UserInfo);
             removeItem(StorageEnum.UserToken);
          }
+         window.location.href = '/login';
          return res;
       })
       .catch((error) => {
+         window.location.reload();
          return error;
       });
 };

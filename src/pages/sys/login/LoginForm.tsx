@@ -1,7 +1,6 @@
 import { App, Button, Checkbox, Col, Divider, Form, Input, Row } from 'antd';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
 
 import { SignInReq } from '@/api/services/userService';
 import LogoHome from '@/assets/images/background/logo-futa.png';
