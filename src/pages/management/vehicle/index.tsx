@@ -64,6 +64,7 @@ export default function VehiclePage() {
             console.log('Response from API:', response); // Thêm log để kiểm tra
             if (response && Array.isArray(response)) {
                setVehicles(response);
+               console.log('setting ', response);
             } else {
                console.error('Invalid response format:', response);
                setVehicles([]);
