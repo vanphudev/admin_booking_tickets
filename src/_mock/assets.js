@@ -161,7 +161,7 @@ const USERS_PERMISSION = {
          name: 'Employee',
          type: PermissionType.MENU,
          route: 'employee',
-         component: '/users/employee/index.tsx',
+         component: '/management/employee/index.tsx',
       },
       {
          id: '100033',
