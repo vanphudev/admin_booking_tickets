@@ -28,6 +28,7 @@ import type { FilterDropdownProps } from 'antd/es/table/interface';
 import GoogleMapIframe from '@components/GoogleMapIframe/GoogleMapIframe';
 import dayjs from 'dayjs';
 import { useCopyToClipboard } from '@/hooks/event/use-copy-to-clipboard';
+
 import { useSelector, useDispatch } from 'react-redux';
 import { RootState } from '@/redux/stores/store';
 import { setOfficesSlice } from '@/redux/slices/officeSlice';
@@ -125,7 +126,6 @@ export default function OfficePage() {
    const [loading, setLoading] = useState(true);
    const [loadingDelete, setLoadingDelete] = useState(false);
    const [error, setError] = useState(null);
-   const [offices, setOffices] = useState<Office[]>([]);
    const dispatch = useDispatch();
 
    const officesSlice = useSelector((state: RootState) => state.office.offices);
@@ -375,19 +375,18 @@ export default function OfficePage() {
          title: 'Create New',
          isCreate: true,
          formValue: {
-            ...prev.formValue,
             ...DEFAULE_OFFICE_VALUE,
          },
       }));
    };
 
-   const onEdit = (formValue: Office) => {
+   const onEdit = (recore: Office) => {
       setOfficeModalProps((prev) => ({
          ...prev,
          show: true,
-         title: 'Edit',
+         title: 'Edit Office',
          isCreate: false,
-         formValue,
+         formValue: recore,
       }));
    };
 
@@ -482,7 +481,7 @@ export default function OfficePage() {
          scroll={{ y: 'calc(100vh - 300px)' }}
          pagination={{
             size: 'default',
-            total: offices?.length || 0,
+            total: officesSlice?.length || 0,
             showSizeChanger: true,
             showQuickJumper: true,
             showTotal: (total) => `Total ${total} items`,

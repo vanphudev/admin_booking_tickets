@@ -30,7 +30,7 @@ export const fetchEmployeeTypes = createAsyncThunk(
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 export const createEmployeeType = createAsyncThunk(
@@ -46,7 +46,7 @@ export const createEmployeeType = createAsyncThunk(
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 export const updateEmployeeType = createAsyncThunk(
@@ -62,7 +62,7 @@ export const updateEmployeeType = createAsyncThunk(
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 export const deleteEmployeeType = createAsyncThunk(
@@ -78,7 +78,7 @@ export const deleteEmployeeType = createAsyncThunk(
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 const employeeTypeSlice = createSlice({
@@ -110,7 +110,7 @@ const employeeTypeSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
             notification.error({ message: action.payload as string });
-         })
+         });
 
       // Create employee type
       builder
@@ -126,7 +126,7 @@ const employeeTypeSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
             notification.error({ message: action.payload as string });
-         })
+         });
 
       // Update employee type
       builder
@@ -137,7 +137,7 @@ const employeeTypeSlice = createSlice({
          .addCase(updateEmployeeType.fulfilled, (state, action) => {
             state.loading = false;
             const index = state.employeeTypes.findIndex(
-               (type) => type.employee_type_id === action.payload.employee_type_id
+               (type) => type.employee_type_id === action.payload.employee_type_id,
             );
             if (index !== -1) {
                state.employeeTypes[index] = action.payload;
@@ -147,7 +147,7 @@ const employeeTypeSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
             notification.error({ message: action.payload as string });
-         })
+         });
 
       // Delete employee type
       builder
@@ -157,9 +157,7 @@ const employeeTypeSlice = createSlice({
          })
          .addCase(deleteEmployeeType.fulfilled, (state, action) => {
             state.loading = false;
-            state.employeeTypes = state.employeeTypes.filter(
-               (type) => type.employee_type_id !== action.payload
-            );
+            state.employeeTypes = state.employeeTypes.filter((type) => type.employee_type_id !== action.payload);
          })
          .addCase(deleteEmployeeType.rejected, (state, action) => {
             state.loading = false;

@@ -1,19 +1,45 @@
+import { Office } from '../office/entity';
+
 export interface Vehicle {
-   id: number; // vehicle_id
-   code: string; // vehicle_code
-   name: string; // vehicle_license_plate
-   model?: string; // vehicle_model
-   brand?: string; // vehicle_brand
-   capacity: number; // vehicle_capacity
-   manufactureYear?: number; // vehicle_manufacture_year
-   color?: string; // vehicle_color
-   description?: string; // vehicle_description
-   isLocked?: 0 | 1; // is_locked
-   lastLockAt?: string | null; // last_lock_at
-   createdAt?: string; // created_at
-   updatedAt?: string; // updated_at
-   mapVehicleLayoutId?: number; // map_vehicle_layout_id
-   officeId?: number; // office_id
-   vehicleTypeId?: number; // vehicle_type_id
-   images?: (string | File)[];
+   id: number;
+   code: string;
+   name: string;
+   model?: string;
+   brand?: string;
+   capacity: number;
+   manufactureYear?: number;
+   color?: string;
+   description?: string;
+   isLocked?: 0 | 1;
+   lastLockAt?: string | null;
+   createdAt?: string;
+   updatedAt?: string;
+   mapVehicleLayout?: MapVehicleLayout;
+   office?: Office;
+   vehicleType?: VehicleType;
+   images?: File[];
+}
+
+export interface MapVehicleSeat {
+   id: number;
+   code: string;
+   row_no: number;
+   column_no: number;
+   floor_no: number;
+   lock_chair: boolean;
+   createdAt?: string;
+   updatedAt?: string;
+   layout?: MapVehicleLayout;
+}
+
+export interface MapVehicleLayout {
+   id: number;
+   name: string;
+   createdAt?: string;
+   updatedAt?: string;
+}
+
+export interface VehicleType {
+   id: number;
+   name: string;
 }

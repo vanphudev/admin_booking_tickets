@@ -23,17 +23,14 @@ const initialState: ArticleTypeState = {
    error: null,
 };
 
-export const fetchArticleTypes = createAsyncThunk(
-   'articleType/getArticleTypes', 
-   async (_, { rejectWithValue }) => {
-      try {
-         const response = await articleTypeAPI.getArticleTypes();
-         return response;
-      } catch (error) {
-         return rejectWithValue(error.message);
-      }
+export const fetchArticleTypes = createAsyncThunk('articleType/getArticleTypes', async (_, { rejectWithValue }) => {
+   try {
+      const response = await articleTypeAPI.getArticleTypes();
+      return response;
+   } catch (error) {
+      return rejectWithValue(error.message);
    }
-);
+});
 
 export const createArticleType = createAsyncThunk(
    'articleType/createArticleType',
@@ -44,7 +41,7 @@ export const createArticleType = createAsyncThunk(
       } catch (error) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 export const updateArticleType = createAsyncThunk(
@@ -56,7 +53,7 @@ export const updateArticleType = createAsyncThunk(
       } catch (error) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 export const deleteArticleType = createAsyncThunk(
@@ -68,7 +65,7 @@ export const deleteArticleType = createAsyncThunk(
       } catch (error) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 const articleTypeSlice = createSlice({
@@ -102,9 +99,7 @@ const articleTypeSlice = createSlice({
 
       // Update
       builder.addCase(updateArticleType.fulfilled, (state, action) => {
-         const index = state.articleTypes.findIndex(
-            (type) => type.article_type_id === action.payload.article_type_id
-         );
+         const index = state.articleTypes.findIndex((type) => type.article_type_id === action.payload.article_type_id);
          if (index !== -1) {
             state.articleTypes[index] = action.payload;
          }
@@ -112,9 +107,7 @@ const articleTypeSlice = createSlice({
 
       // Delete
       builder.addCase(deleteArticleType.fulfilled, (state, action) => {
-         state.articleTypes = state.articleTypes.filter(
-            (type) => type.article_type_id !== action.payload.id
-         );
+         state.articleTypes = state.articleTypes.filter((type) => type.article_type_id !== action.payload.id);
       });
    },
 });

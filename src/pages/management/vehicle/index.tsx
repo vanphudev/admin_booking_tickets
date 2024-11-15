@@ -6,17 +6,29 @@ import { IconButton, Iconify } from '@/components/icon';
 import vehicleAPI from '@/redux/api/services/vehicleAPI';
 import ProTag from '@/theme/antd/components/tag';
 
-import { Vehicle } from './entity';
+import { Vehicle, MapVehicleSeat, VehicleType, MapVehicleLayout } from './entity';
 import { VehicleModal, type VehicleModalProps } from './vehicleModal';
 
 const DEFAULT_VEHICLE_VALUE: Vehicle = {
    id: 0,
    code: '',
    name: '',
+   model: '',
+   brand: '',
    capacity: 0,
+   manufactureYear: 0,
+   color: '',
+   description: '',
    isLocked: 0,
+   lastLockAt: null,
+   createdAt: '',
+   updatedAt: '',
+   mapVehicleLayout: undefined,
+   office: undefined,
+   vehicleType: undefined,
    images: [],
 };
+
 function transformApiResponseToVehicle(apiResponse: any): Vehicle {
    return {
       id: apiResponse.vehicle_id,

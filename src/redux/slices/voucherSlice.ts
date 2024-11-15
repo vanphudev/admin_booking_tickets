@@ -20,20 +20,17 @@ const initialState: VoucherState = {
 };
 
 // Async thunks
-export const fetchVouchers = createAsyncThunk(
-   'voucher/fetchVouchers',
-   async (_, { rejectWithValue }) => {
-      try {
-         const response = await voucherAPI.getVouchers();
-         if (response.success && response.data) {
-            return response.data;
-         }
-         return rejectWithValue(response.message || 'Không thể tải danh sách voucher');
-      } catch (error: any) {
-         return rejectWithValue(error.message);
+export const fetchVouchers = createAsyncThunk('voucher/fetchVouchers', async (_, { rejectWithValue }) => {
+   try {
+      const response = await voucherAPI.getVouchers();
+      if (response.success && response.data) {
+         return response.data;
       }
+      return rejectWithValue(response.message || 'Không thể tải danh sách voucher');
+   } catch (error: any) {
+      return rejectWithValue(error.message);
    }
-);
+});
 
 export const createVoucher = createAsyncThunk(
    'voucher/createVoucher',
@@ -48,7 +45,7 @@ export const createVoucher = createAsyncThunk(
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 export const updateVoucher = createAsyncThunk(
@@ -64,7 +61,7 @@ export const updateVoucher = createAsyncThunk(
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 export const deleteVoucher = createAsyncThunk(
@@ -80,7 +77,7 @@ export const deleteVoucher = createAsyncThunk(
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
-   }
+   },
 );
 
 // Slice
@@ -113,7 +110,7 @@ const voucherSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
             notification.error({ message: action.payload as string });
-         })
+         });
 
       // Create voucher
       builder
@@ -131,7 +128,7 @@ const voucherSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
             notification.error({ message: action.payload as string });
-         })
+         });
 
       // Update voucher
       builder
@@ -142,7 +139,7 @@ const voucherSlice = createSlice({
          .addCase(updateVoucher.fulfilled, (state, action) => {
             state.loading = false;
             if (action.payload) {
-               const index = state.vouchers.findIndex(v => v.voucher_id === action.payload?.voucher_id);
+               const index = state.vouchers.findIndex((v) => v.voucher_id === action.payload?.voucher_id);
                if (index !== -1) {
                   state.vouchers[index] = action.payload;
                }
@@ -152,7 +149,7 @@ const voucherSlice = createSlice({
             state.loading = false;
             state.error = action.payload as string;
             notification.error({ message: action.payload as string });
-         })
+         });
 
       // Delete voucher
       builder
@@ -162,7 +159,7 @@ const voucherSlice = createSlice({
          })
          .addCase(deleteVoucher.fulfilled, (state, action) => {
             state.loading = false;
-            state.vouchers = state.vouchers.filter(v => v.voucher_id !== action.payload);
+            state.vouchers = state.vouchers.filter((v) => v.voucher_id !== action.payload);
          })
          .addCase(deleteVoucher.rejected, (state, action) => {
             state.loading = false;
