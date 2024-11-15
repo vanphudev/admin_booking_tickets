@@ -56,16 +56,16 @@ export default function VehiclePage() {
       loadVehicles();
    }, []);
 
-   const loadVehicles = () => {
+   const loadVehicles = async () => {
       setLoading(true);
-      vehicleAPI
+      await vehicleAPI
          .getVehicles()
          .then((response) => {
-            console.log('Response from API:', response); // Thêm log để kiểm tra
+            console.log('Response from API:', response);
             if (response && Array.isArray(response)) {
+               console.log('Setting vehicles:', response);
                setVehicles(response);
             } else {
-               console.error('Invalid response format:', response);
                setVehicles([]);
             }
          })

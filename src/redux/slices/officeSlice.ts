@@ -1,9 +1,9 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-import officeAPI from '../api/services/officeAPI';
+import { Office } from '@/pages/management/office/entity';
 
 const initialState: {
-   offices: any[];
+   offices: Office[];
    loading: boolean;
    error: string | null;
 } = {
@@ -12,36 +12,24 @@ const initialState: {
    error: null,
 };
 
-export const fetchOffices = createAsyncThunk('office/getOffices', async () => {
-   const response = await officeAPI.getOffices();
-   return response;
-});
-
 const officeSlice = createSlice({
    name: 'office',
    initialState,
    reducers: {
-      setOffices: (state, action: PayloadAction<any[]>) => {
+      setOfficesSlice: (state, action: PayloadAction<Office[]>) => {
          state.offices = action.payload;
       },
       clearOffices: (state) => {
          state.offices = [];
       },
-   },
-   extraReducers: (builder) => {
-      builder.addCase(fetchOffices.pending, (state) => {
-         state.loading = true;
-      });
-      builder.addCase(fetchOffices.fulfilled, (state, action) => {
-         state.offices = action.payload.data;
-         state.loading = false;
-      });
-      builder.addCase(fetchOffices.rejected, (state, action) => {
-         state.error = action.error.message || null;
-         state.loading = false;
-      });
+      setLoading: (state, action: PayloadAction<boolean>) => {
+         state.loading = action.payload;
+      },
+      setError: (state, action: PayloadAction<string | null>) => {
+         state.error = action.payload;
+      },
    },
 });
 
-export const { setOffices, clearOffices } = officeSlice.actions;
+export const { setOfficesSlice, clearOffices, setLoading, setError } = officeSlice.actions;
 export const officeReducer = officeSlice.reducer;

@@ -1,7 +1,6 @@
 {
    "formatOnSave": true,
    "printWidth": 120,
-
    "semi": true,
    "tabWidth": 3,
    "singleQuote": true,

@@ -1,9 +1,12 @@
 import { useScroll } from 'framer-motion';
 import { Suspense, useCallback, useEffect, useRef, useState } from 'react';
+import { useDispatch } from 'react-redux';
 import styled from 'styled-components';
 
 import { CircleLoading } from '@/components/loading';
 import ProgressBar from '@/components/progress-bar';
+import addressAPI from '@/redux/api/services/adressAPI';
+import { setProvinces, setDistricts, setWards } from '@/redux/slices/adressSlice';
 import { useSettings } from '@/store/settingStore';
 import { useThemeToken } from '@/theme/hooks';
 
@@ -29,6 +32,19 @@ function DashboardLayout() {
          }
       });
    }, [scrollY]);
+
+   const dispatch = useDispatch();
+   useEffect(() => {
+      addressAPI.getProvinces().then((res) => {
+         dispatch(setProvinces(res));
+      });
+      addressAPI.getDistrictsAll().then((res) => {
+         dispatch(setDistricts(res));
+      });
+      addressAPI.getWardsAll().then((res) => {
+         dispatch(setWards(res));
+      });
+   }, [dispatch]);
 
    useEffect(() => {
       onOffSetTop();

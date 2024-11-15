@@ -92,7 +92,6 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
                ...formData,
                images: fileList,
             };
-
             if (isCreate) {
                vehicleAPI.createVehicle(submitData).then((res) => {
                   if (res && (res.status === 201 || res.status === 200)) {
