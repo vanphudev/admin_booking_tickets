@@ -2,66 +2,78 @@ import { Driver } from '@/pages/management/driver/entity';
 import apiClient from '../apiClient';
 
 export enum DriverApi {
-   GetDrivers = 'private/driver/all',
-   CreateDriver = 'private/driver/create',
-   UpdateDriver = 'private/driver/update',
-   DeleteDriver = 'private/driver/delete',
+   GetDrivers = '/public/driver/all',
+   CreateDriver = '/private/driver/create',
+   UpdateDriver = '/private/driver/update',
+   DeleteDriver = '/private/driver/delete',
 }
 
-const getDrivers = (): Promise<any> => {
-   return apiClient
-      .get({ url: DriverApi.GetDrivers })
-      .then((res: any) => {
-         if (res) {
-            return res.data?.metadata?.drivers;
-         }
-         return null;
-      })
-      .catch((error) => {
-         console.log('Lỗi getDrivers', error);
-         return error;
-      });
+interface ApiResponse {
+   success: boolean;
+   message?: string;
+   metadata?: {
+      drivers?: Driver[];
+      driver?: Driver;
+   };
+}
+
+const getDrivers = async () => {
+   try {
+      const response = (await apiClient.get({ url: DriverApi.GetDrivers })) as { data: ApiResponse };
+      return response.data?.metadata?.drivers || [];
+   } catch (error) {
+      console.error('Lỗi getDrivers:', error);
+      throw error;
+   }
 };
 
-const createDriver = (data: FormData): Promise<any> => {
-   return apiClient
-      .post({
+const createDriver = async (data: Partial<Driver>) => {
+   try {
+      const response = (await apiClient.post({
          url: DriverApi.CreateDriver,
          data,
-         headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then((res: any) => {
-         return res;
-      })
-      .catch((error) => {
-         return error;
-      });
+      })) as { data: ApiResponse };
+      return {
+         success: response.data?.success || false,
+         data: response.data?.metadata?.driver,
+         message: response.data?.message,
+      };
+   } catch (error) {
+      console.error('Lỗi createDriver:', error);
+      throw error;
+   }
 };
 
-const updateDriver = (data: FormData): Promise<any> => {
-   return apiClient
-      .put({
-         url: DriverApi.UpdateDriver,
+const updateDriver = async (data: Partial<Driver>) => {
+   try {
+      const response = (await apiClient.put({
+         url: `${DriverApi.UpdateDriver}/${data.driver_id}`,
          data,
-         headers: { 'Content-Type': 'multipart/form-data' },
-      })
-      .then((res: any) => {
-         return res;
-      })
-      .catch((error) => {
-         return error;
-      });
+      })) as { data: ApiResponse };
+      return {
+         success: response.data?.success || false,
+         data: response.data?.metadata?.driver,
+         message: response.data?.message,
+      };
+   } catch (error) {
+      console.error('Lỗi updateDriver:', error);
+      throw error;
+   }
 };
 
-const deleteDriver = (id: string): Promise<any> => {
-   return apiClient
-      .delete({ url: `${DriverApi.DeleteDriver}/${id}` })
-      .then((res: any) => {
-         return res;
-      })
-      .catch((error) => {
-         return error;
-      });
+const deleteDriver = async (driver_id: number) => {
+   try {
+      const response = (await apiClient.delete({
+         url: `${DriverApi.DeleteDriver}/${driver_id}`,
+      })) as { data: ApiResponse };
+      return {
+         success: response.data?.success || false,
+         message: response.data?.message,
+      };
+   } catch (error) {
+      console.error('Lỗi deleteDriver:', error);
+      throw error;
+   }
 };
 
 export default {

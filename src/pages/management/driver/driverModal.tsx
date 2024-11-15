@@ -1,121 +1,120 @@
-import { App, Form, Modal, Input, InputNumber } from 'antd';
+import { Form, Modal, Input, InputNumber, Select, App } from 'antd';
 import { useEffect } from 'react';
-
-import driverAPI from '@/redux/api/services/driverAPI';
+import { useDispatch, useSelector } from 'react-redux';
+import { AppDispatch, RootState } from '@/redux/stores/store';
+import { fetchEmployees } from '@/redux/slices/employeeSlice';
 import { Driver } from './entity';
+import { Employee } from '../employee/entity';
+import driverAPI from '@/redux/api/services/driverAPI';
+
+const { Option } = Select;
 
 interface DriverModalProps {
    formValue: Driver;
    title: string;
    show: boolean;
-   onOk: VoidFunction;
-   onCancel: VoidFunction;
+   onOk: () => void;
+   onCancel: () => void;
    isCreate: boolean;
 }
 
 export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }: DriverModalProps) {
    const [form] = Form.useForm();
    const { notification } = App.useApp();
+   const dispatch = useDispatch<AppDispatch>();
+
+   const employees = useSelector((state: RootState) => state.employee.employees);
+   const employeeLoading = useSelector((state: RootState) => state.employee.loading);
 
    useEffect(() => {
       if (show) {
-         form.setFieldsValue(formValue);
-      } else {
+         dispatch(fetchEmployees());
+      }
+   }, [dispatch, show]);
+
+   useEffect(() => {
+      if (!show) {
          form.resetFields();
+      }
+   }, [show, form]);
+
+   useEffect(() => {
+      if (show && formValue) {
+         form.setFieldsValue({
+            employee_id: formValue.employee_id,
+            driver_license_number: formValue.driver_license_number,
+            driver_experience_years: formValue.driver_experience_years,
+         });
       }
    }, [show, formValue, form]);
 
-   const handleSubmit = async () => {
+   const handleOk = async () => {
       try {
          const values = await form.validateFields();
-         const formData = new FormData();
-
-         // Append driver data
-         formData.append('driver_license_number', values.driver_license_number);
-         formData.append('driver_experience_years', values.driver_experience_years);
-
-         // Append employee data
-         formData.append('employee_full_name', values.Employee.employee_full_name);
-         formData.append('employee_email', values.Employee.employee_email);
-         formData.append('employee_phone', values.Employee.employee_phone);
-         formData.append('employee_username', values.Employee.employee_username);
 
          if (isCreate) {
-            await driverAPI.createDriver(formData);
-            notification.success({
-               message: 'Thêm tài xế thành công',
-            });
+            const response = await driverAPI.createDriver(values);
+            if (response.success) {
+               notification.success({
+                  message: 'Tạo tài xế thành công!',
+               });
+               onOk();
+            }
          } else {
-            formData.append('driver_id', formValue.driver_id!.toString());
-            await driverAPI.updateDriver(formData);
-            notification.success({
-               message: 'Cập nhật tài xế thành công',
+            const response = await driverAPI.updateDriver({
+               ...values,
+               driver_id: formValue.driver_id,
             });
+            if (response.success) {
+               notification.success({
+                  message: 'Cập nhật tài xế thành công!',
+               });
+               onOk();
+            }
          }
-         onOk();
       } catch (error: any) {
          notification.error({
-            message: 'Có lỗi xảy ra',
+            message: 'Có lỗi xảy ra!',
             description: error.message,
          });
       }
    };
 
    return (
-      <Modal title={title} open={show} onOk={handleSubmit} onCancel={onCancel} width={600} centered>
-         <Form form={form} layout="vertical" initialValues={formValue}>
+      <Modal title={title} open={show} onOk={handleOk} onCancel={onCancel} width="60%" centered maskClosable={false}>
+         <Form form={form} layout="horizontal" labelCol={{ span: 6 }} wrapperCol={{ span: 16 }}>
             <Form.Item
-               label="Họ và tên"
-               name={['Employee', 'employee_full_name']}
-               rules={[{ required: true, message: 'Vui lòng nhập họ tên' }]}
+               label="Nhân viên"
+               name="employee_id"
+               rules={[{ required: true, message: 'Vui lòng chọn nhân viên!' }]}
             >
-               <Input />
+               <Select placeholder="Chọn nhân viên" loading={employeeLoading} disabled={!isCreate}>
+                  {employees?.map((employee: Employee) => (
+                     <Option
+                        key={employee.employee_id}
+                        value={employee.employee_id}
+                        disabled={employee.is_locked === 1}
+                     >
+                        {employee.employee_full_name} - {employee.employee_email}
+                     </Option>
+                  ))}
+               </Select>
             </Form.Item>
 
             <Form.Item
-               label="Email"
-               name={['Employee', 'employee_email']}
-               rules={[
-                  { required: true, message: 'Vui lòng nhập email' },
-                  { type: 'email', message: 'Email không hợp lệ' },
-               ]}
-            >
-               <Input />
-            </Form.Item>
-
-            <Form.Item
-               label="Số điện thoại"
-               name={['Employee', 'employee_phone']}
-               rules={[
-                  { required: true, message: 'Vui lòng nhập số điện thoại' },
-                  { pattern: /^[0-9]+$/, message: 'Số điện thoại không hợp lệ' },
-               ]}
-            >
-               <Input />
-            </Form.Item>
-
-            <Form.Item
-               label="Tên đăng nhập"
-               name={['Employee', 'employee_username']}
-               rules={[{ required: true, message: 'Vui lòng nhập tên đăng nhập' }]}
-            >
-               <Input />
-            </Form.Item>
-
-            <Form.Item
-               label="Số giấy phép lái xe"
+               label="Số GPLX"
                name="driver_license_number"
-               rules={[{ required: true, message: 'Vui lòng nhập số GPLX' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập số GPLX!' }]}
             >
-               <Input />
+               <Input placeholder="Nhập số giấy phép lái xe" />
             </Form.Item>
 
             <Form.Item
-               label="Số năm kinh nghiệm"
+               label="Kinh nghiệm (năm)"
                name="driver_experience_years"
-               rules={[{ required: true, message: 'Vui lòng nhập số năm kinh nghiệm' }]}
+               rules={[{ required: true, message: 'Vui lòng nhập số năm kinh nghiệm!' }]}
             >
-               <InputNumber min={0} style={{ width: '100%' }} />
+               <InputNumber placeholder="Nhập số năm kinh nghiệm" style={{ width: '100%' }} min={0} />
             </Form.Item>
          </Form>
       </Modal>

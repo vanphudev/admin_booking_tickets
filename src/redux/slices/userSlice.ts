@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
 
-import userAPI from '@/redux/api/services/userAPI';
+import { UserApi } from '../api/services/userAPI';
 
 import { UserInfo, UserToken } from '#/entity';
 

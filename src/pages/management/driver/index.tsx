@@ -1,92 +1,156 @@
-import { App, Button, Card, Popconfirm, Avatar } from 'antd';
+import { App, Button, Card, Popconfirm } from 'antd';
 import Table, { ColumnsType } from 'antd/es/table';
 import { useState, useEffect } from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 import { IconButton, Iconify } from '@/components/icon';
 import driverAPI from '@/redux/api/services/driverAPI';
-import ProTag from '@/theme/antd/components/tag';
+import { Driver } from './entity';
 import { DriverModal } from './driverModal';
-import { DropdownProps } from 'antd/es/dropdown/dropdown';
-export interface Driver {
-   driver_id?: number;
-   driver_license_number: string;
-   driver_experience_years: number;
-   created_at?: string;
-   updated_at?: string;
-   employee_id?: number;
-   Employee?: {
-      employee_full_name: string;
-      employee_email: string;
-      employee_phone: string;
-      employee_username: string;
-   };
-}
+import { RootState } from '@/redux/stores/store';
+import ProTag from '@/theme/antd/components/tag';
 
 const DEFAULT_DRIVER: Driver = {
+   driver_id: 0,
    driver_license_number: '',
    driver_experience_years: 0,
-   Employee: {
+   employee_id: 0,
+   employee: {
+      employee_id: 0,
       employee_full_name: '',
       employee_email: '',
       employee_phone: '',
       employee_username: '',
+      employee_gender: 1,
+      is_locked: 0,
    },
 };
 
 export default function DriverPage() {
    const dispatch = useDispatch();
    const { notification } = App.useApp();
-   const [loading, setLoading] = useState(true);
+   const [loading, setLoading] = useState(false);
    const [drivers, setDrivers] = useState<Driver[]>([]);
 
-   useEffect(() => {
-      driverAPI
-         .getDrivers()
-         .then((res: any) => {
-            setDrivers(res);
-            setLoading(false);
-         })
-         .catch((error) => {
-            notification.error({
-               message: 'Có lỗi xảy ra khi tải danh sách tài xế',
-               description: error.message,
-            });
-            setLoading(false);
+   const [modalData, setModalData] = useState({
+      formValue: DEFAULT_DRIVER,
+      title: '',
+      show: false,
+      isCreate: true,
+   });
+
+   const fetchDriverList = async () => {
+      setLoading(true);
+      try {
+         const data = await driverAPI.getDrivers();
+         setDrivers(data || []);
+      } catch (error: any) {
+         notification.error({
+            message: 'Lỗi khi tải danh sách tài xế',
+            description: error.message,
          });
-   }, [notification]);
+      } finally {
+         setLoading(false);
+      }
+   };
+
+   useEffect(() => {
+      fetchDriverList();
+   }, []);
+
+   const handleCreate = () => {
+      setModalData({
+         formValue: DEFAULT_DRIVER,
+         title: 'Thêm Tài Xế Mới',
+         show: true,
+         isCreate: true,
+      });
+   };
+
+   const handleEdit = (record: Driver) => {
+      setModalData({
+         formValue: record,
+         title: 'Chỉnh Sửa Tài Xế',
+         show: true,
+         isCreate: false,
+      });
+   };
+
+   const handleDelete = async (driver_id: number) => {
+      try {
+         await driverAPI.deleteDriver(Number(driver_id));
+         notification.success({
+            message: 'Xóa tài xế thành công',
+         });
+         fetchDriverList();
+      } catch (error: any) {
+         notification.error({
+            message: 'Lỗi khi xóa tài xế',
+            description: error.message,
+         });
+      }
+   };
 
    const columns: ColumnsType<Driver> = [
       {
          title: 'Họ và tên',
-         dataIndex: ['Employee', 'employee_full_name'],
+         dataIndex: ['employee', 'employee_full_name'],
          fixed: 'left',
+         width: 200,
       },
       {
          title: 'Email',
-         dataIndex: ['Employee', 'employee_email'],
+         dataIndex: ['employee', 'employee_email'],
+         width: 200,
       },
       {
          title: 'Số điện thoại',
-         dataIndex: ['Employee', 'employee_phone'],
+         dataIndex: ['employee', 'employee_phone'],
+         width: 150,
       },
       {
          title: 'Tên đăng nhập',
-         dataIndex: ['Employee', 'employee_username'],
+         dataIndex: ['employee', 'employee_username'],
+         width: 150,
+      },
+      {
+         title: 'Giới tính',
+         dataIndex: ['employee', 'employee_gender'],
+         width: 100,
+         render: (value) => {
+            const genderMap = {
+               1: 'Nam',
+               0: 'Nữ',
+               [-1]: 'Khác',
+            };
+            return (
+               <ProTag color={value === 1 ? 'blue' : value === 0 ? 'pink' : 'default'}>
+                  {genderMap[value as keyof typeof genderMap]}
+               </ProTag>
+            );
+         },
       },
       {
          title: 'Số GPLX',
          dataIndex: 'driver_license_number',
+         width: 150,
       },
       {
          title: 'Kinh nghiệm (năm)',
          dataIndex: 'driver_experience_years',
+         width: 150,
+      },
+      {
+         title: 'Trạng thái',
+         dataIndex: ['employee', 'is_locked'],
+         width: 120,
+         render: (value) => <ProTag color={value ? 'error' : 'success'}>{value ? 'Đã khóa' : 'Hoạt động'}</ProTag>,
       },
       {
          title: 'Thao tác',
          key: 'action',
          fixed: 'right',
-         width: 100,
+         width: 120,
          render: (_, record) => (
             <div className="flex gap-2">
                <IconButton onClick={() => handleEdit(record)}>
@@ -95,7 +159,7 @@ export default function DriverPage() {
                <Popconfirm
                   title="Xóa tài xế"
                   description="Bạn có chắc muốn xóa tài xế này?"
-                  onConfirm={() => handleDelete(record.driver_id!)}
+                  onConfirm={() => handleDelete(record.driver_id)}
                >
                   <IconButton>
                      <Iconify icon="solar:trash-bin-trash-bold-duotone" className="text-error" />
@@ -105,48 +169,6 @@ export default function DriverPage() {
          ),
       },
    ];
-
-   const [modalData, setModalData] = useState({
-      formValue: DEFAULT_DRIVER,
-      title: '',
-      show: false,
-      isCreate: true,
-   });
-
-   const handleCreate = () => {
-      setModalData({
-         title: 'Thêm tài xế mới',
-         show: true,
-         isCreate: true,
-         formValue: DEFAULT_DRIVER,
-      });
-   };
-
-   const handleEdit = (record: Driver) => {
-      setModalData({
-         title: 'Sửa thông tin tài xế',
-         show: true,
-         isCreate: false,
-         formValue: record,
-      });
-   };
-
-   const handleDelete = async (id: number) => {
-      try {
-         await driverAPI.deleteDriver(id.toString());
-         notification.success({
-            message: 'Xóa tài xế thành công',
-         });
-         // Refresh data
-         const newData = await driverAPI.getDrivers();
-         setDrivers(newData);
-      } catch (error: any) {
-         notification.error({
-            message: 'Có lỗi xảy ra',
-            description: error.message,
-         });
-      }
-   };
 
    return (
       <Card
@@ -166,7 +188,7 @@ export default function DriverPage() {
             pagination={{
                showSizeChanger: true,
                showQuickJumper: true,
-               showTotal: (total) => `Tổng ${total} bản ghi`,
+               showTotal: (total) => `Tổng ${total} tài xế`,
             }}
          />
          <DriverModal
@@ -174,8 +196,7 @@ export default function DriverPage() {
             onCancel={() => setModalData((prev) => ({ ...prev, show: false }))}
             onOk={async () => {
                setModalData((prev) => ({ ...prev, show: false }));
-               const newData = await driverAPI.getDrivers();
-               setDrivers(newData);
+               await fetchDriverList();
             }}
          />
       </Card>
