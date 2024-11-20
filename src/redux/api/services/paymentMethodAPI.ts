@@ -1,76 +1,112 @@
-import { PaymentMethod } from '@/pages/management/method-payment/entity';
 import apiClient from '../apiClient';
+import { PaymentMethod } from '@/pages/management/method-payment/entity';
 
+export enum PaymentMethodApi {
+   GetPaymentMethods = 'public/payment-method/getall',
+   CreatePaymentMethod = 'private/payment-method/create',
+   UpdatePaymentMethod = 'private/payment-method/update',
+   DeletePaymentMethod = 'private/payment-method/delete',
+   UploadImage = 'private/paymentmethodimage/create',
+   UpdateImage = 'private/paymentmethodimage/update',
+}
 const getPaymentMethods = (): Promise<any> => {
    return apiClient
-      .get({ url: 'private/payment-method/all' })
+      .get({ url: PaymentMethodApi.GetPaymentMethods })
       .then((res: any) => {
          console.log('API Response:', res);
-         if (res?.data?.metadata?.paymentMethods) {
-            return res.data.metadata.paymentMethods;
+         if (res && res.data) {
+            return res.data?.metadata?.methods;
          }
-         return [];
+         return null;
       })
       .catch((error) => {
          console.log('Lỗi getPaymentMethods', error);
-         throw error;
+         return error;
       });
 };
 
-const getPaymentTypes = (): Promise<any> => {
-   return apiClient
-      .get({ url: 'private/payment-type/all' })
-      .then((res: any) => {
-         if (res?.data?.metadata?.paymentTypes) {
-            return res.data.metadata.paymentTypes;
-         }
-         return [];
-      })
-      .catch((error) => {
-         console.log('Lỗi getPaymentTypes', error);
-         throw error;
-      });
-};
-
-const createPaymentMethod = (data: FormData | PaymentMethod): Promise<any> => {
-   return apiClient
-      .post({
-         url: 'private/payment-method/create',
+const createPaymentMethod = async (data: PaymentMethod): Promise<any> => {
+   try {
+      const res = (await apiClient.post({
+         url: PaymentMethodApi.CreatePaymentMethod,
          data,
-         headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-      })
-      .then((res: any) => res)
-      .catch((error) => {
-         throw error;
-      });
+      })) as any;
+      if (!res || !res.data) {
+         console.error('Response from CreatePaymentMethod API is missing or invalid', res);
+         return res;
+      }
+      const { metadata } = res.data;
+      if (!metadata || !metadata.payment_method) {
+         console.warn('Metadata or payment method information is missing in response', res.data);
+         return res;
+      }
+      const { payment_method_id: id, payment_method_name: paymentMethodName } = metadata.payment_method;
+      if (!id || !paymentMethodName) {
+         console.warn('Missing Payment Method ID or payment method name in response', metadata.payment_method);
+         return res;
+      }
+      return res;
+   } catch (error) {
+      console.error('Error creating payment method', error);
+      throw error;
+   }
 };
 
-const updatePaymentMethod = (id: string, data: FormData | PaymentMethod): Promise<any> => {
-   return apiClient
-      .put({
-         url: `private/payment-method/update/${id}`,
-         data,
-         headers: data instanceof FormData ? { 'Content-Type': 'multipart/form-data' } : undefined,
-      })
-      .then((res: any) => res)
-      .catch((error) => {
-         throw error;
-      });
+const updatePaymentMethod = async (data: PaymentMethod): Promise<any> => {
+   try {
+      const res = (await apiClient.put({ url: PaymentMethodApi.UpdatePaymentMethod, data })) as any;
+      if (!res || !res.data) {
+         console.error('Response from UpdatePaymentMethod API is missing or invalid', res);
+         return res;
+      }
+      const { metadata } = res.data;
+      if (!metadata || !metadata.payment_method) {
+         console.warn('Metadata or Payment Method information is missing in response', res.data);
+         return res;
+      }
+      const { payment_method_id: id, payment_method_name: paymentMethodName } = metadata.payment_method;
+      if (!id || !paymentMethodName) {
+         console.warn('Missing Payment Method ID or payment method name in response', metadata.payment_method);
+         return res;
+      }
+      return res;
+   } catch (error) {
+      console.error('Error updating Payment Method', error);
+      throw error;
+   }
 };
 
 const deletePaymentMethod = (id: string): Promise<any> => {
    return apiClient
-      .delete({ url: `private/payment-method/delete/${id}` })
-      .then((res: any) => res)
+      .delete({ url: `${PaymentMethodApi.DeletePaymentMethod}/${id}` })
+      .then((res: any) => {
+         return res;
+      })
       .catch((error) => {
-         throw error;
+         return error;
+      });
+};
+const uploadImage = (id: string, file: File): Promise<any> => {
+   const formData = new FormData();
+   formData.append('images', file);
+   return apiClient
+      .post({
+         url: `${PaymentMethodApi.UploadImage}${id}`,
+         data: formData,
+         headers: { 'Content-Type': 'multipart/form-data' },
+      })
+      .then((res: any) => {
+         return res;
+      })
+      .catch((error) => {
+         return error;
       });
 };
 
 export default {
    getPaymentMethods,
-   getPaymentTypes,
    createPaymentMethod,
    updatePaymentMethod,
    deletePaymentMethod,
+   uploadImage,
 };

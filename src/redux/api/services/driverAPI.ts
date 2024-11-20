@@ -1,35 +1,41 @@
-import { Office } from '@/pages/management/office/entity';
-
 import apiClient from '../apiClient';
+import { Driver } from '@/pages/management/driver/entity';
 
-export enum OfficeApi {
-   GetOffices = 'public/office/getall',
-   CreateOffice = 'private/office/create',
-   UpdateOffice = 'private/office/update',
-   DeleteOffice = 'private/office/delete',
-   UploadImage = 'private/officeimage/create',
-   UpdateImage = 'private/officeimage/update',
+export enum DriverApi {
+   GetDrivers = 'public/driver/getall',
+   CreateDriver = 'private/driver/create',
+   UpdateDriver = 'private/driver/update',
+   DeleteDriver = 'private/driver/delete',
+   UploadImage = 'private/driverimage/create',
+   UpdateImage = 'private/driverimage/update',
 }
 
-const getOffices = (): Promise<any> => {
+const getDrivers = (): Promise<any> => {
    return apiClient
-      .get({ url: OfficeApi.GetOffices })
+      .get({ url: DriverApi.GetDrivers })
       .then((res: any) => {
          if (res) {
-            return res.data?.metadata?.offices;
+            return res.data?.metadata?.drivers.map((driver: any) => ({
+               driver_id: driver.driver_id,
+               driver_license_number: driver.driver_license_number,
+               driver_experience_years: driver.driver_experience_years,
+               createdAt: driver.created_at,
+               updatedAt: driver.updated_at,
+               driver_onetoOne_employee: driver.driver_onetoOne_employee,
+            }));
          }
          return null;
       })
       .catch((error) => {
-         console.log('Lỗi getOffices', error);
+         console.log('Lỗi getDrivers', error);
          return error;
       });
 };
 
-const createOffice = async (data: Office): Promise<any> => {
+const createDriver = async (data: Driver): Promise<any> => {
    try {
       const res = (await apiClient.post({
-         url: OfficeApi.CreateOffice,
+         url: DriverApi.CreateDriver,
          data,
       })) as any;
       if (!res || !res.data) {
@@ -38,13 +44,13 @@ const createOffice = async (data: Office): Promise<any> => {
          return res;
       }
       const { metadata } = res.data;
-      if (!metadata || !metadata.office) {
-         console.warn('Metadata or office information is missing in response', res.data);
+      if (!metadata || !metadata.driver) {
+         console.warn('Metadata or driver information is missing in response', res.data);
          return res;
       }
-      const { office_id: id, office_name: officeName } = metadata.office;
-      if (!id || !officeName) {
-         console.warn('Missing office ID or office name in response', metadata.office);
+      const { driver_id: id, driver_license_number: driverNumber } = metadata.driver;
+      if (!id || !driverNumber) {
+         console.warn('Missing driver ID or driver number in response', metadata.driver);
          return res;
       }
       if (data.images && data.images.length > 0) {
@@ -52,12 +58,12 @@ const createOffice = async (data: Office): Promise<any> => {
          data.images.forEach((file) => formData.append('images', file));
          try {
             const uploadRes = await apiClient.post({
-               url: OfficeApi.UploadImage,
+               url: DriverApi.UploadImage,
                data: formData,
                headers: {
                   'Content-Type': 'multipart/form-data',
                   officeId: id.toString(),
-                  officeName: encodeURIComponent(officeName),
+                  officeName: encodeURIComponent(driverNumber),
                },
             });
             return { ...res, imageUpload: uploadRes };
@@ -74,21 +80,21 @@ const createOffice = async (data: Office): Promise<any> => {
    }
 };
 
-const updateOffice = async (data: Office): Promise<any> => {
+const updateDriver = async (data: Driver): Promise<any> => {
    try {
-      const res = (await apiClient.put({ url: OfficeApi.UpdateOffice, data })) as any;
+      const res = (await apiClient.put({ url: DriverApi.UpdateDriver, data })) as any;
       if (!res || !res.data) {
-         console.error('Response from UpdateOffice API is missing or invalid', res);
+         console.error('Response from Update Driver API is missing or invalid', res);
          return res;
       }
       const { metadata } = res.data;
-      if (!metadata || !metadata.office) {
-         console.warn('Metadata or office information is missing in response', res.data);
+      if (!metadata || !metadata.driver) {
+         console.warn('Metadata or driver information is missing in response', res.data);
          return res;
       }
-      const { office_id: id, office_name: officeName } = metadata.office;
-      if (!id || !officeName) {
-         console.warn('Missing office ID or office name in response', metadata.office);
+      const { driver_id: id, driver_license_number: driverName } = metadata.driver;
+      if (!id || !driverName) {
+         console.warn('Missing driver ID or office name in response', metadata.driver);
          return res;
       }
       const formData = new FormData();
@@ -96,12 +102,12 @@ const updateOffice = async (data: Office): Promise<any> => {
       data.images && data.images.forEach((file) => formData.append('images', file));
       try {
          const uploadRes = await apiClient.put({
-            url: OfficeApi.UpdateImage,
+            url: DriverApi.UpdateImage,
             data: formData,
             headers: {
                'Content-Type': 'multipart/form-data',
-               officeId: id.toString(),
-               officeName: encodeURIComponent(officeName),
+               driverId: id.toString(),
+               driverName: encodeURIComponent(driverName),
             },
          });
          return { ...res, imageUpload: uploadRes };
@@ -116,9 +122,9 @@ const updateOffice = async (data: Office): Promise<any> => {
    }
 };
 
-const deleteOffice = (id: string): Promise<any> => {
+const deleteDriver = (id: string): Promise<any> => {
    return apiClient
-      .delete({ url: `${OfficeApi.DeleteOffice}/${id}` })
+      .delete({ url: `${DriverApi.DeleteDriver}/${id}` })
       .then((res: any) => {
          return res;
       })
@@ -132,7 +138,7 @@ const uploadImage = (id: string, file: File): Promise<any> => {
    formData.append('images', file);
    return apiClient
       .post({
-         url: `${OfficeApi.UploadImage}${id}`,
+         url: `${DriverApi.UploadImage}${id}`,
          data: formData,
          headers: { 'Content-Type': 'multipart/form-data' },
       })
@@ -145,9 +151,9 @@ const uploadImage = (id: string, file: File): Promise<any> => {
 };
 
 export default {
-   getOffices,
-   createOffice,
-   updateOffice,
-   deleteOffice,
+   getDrivers,
+   createDriver,
+   updateDriver,
+   deleteDriver,
    uploadImage,
 };

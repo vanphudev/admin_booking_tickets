@@ -1,13 +1,15 @@
-import { Vehicle } from './entity';
+import { Driver } from './entity';
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { useEffect, useState } from 'react';
-import { App, Form, Modal, Input, Radio, Space, Select, Flex, Typography, Upload, Spin, Tooltip } from 'antd';
-import { IconButton, Iconify } from '@/components/icon';
-import vehicleAPI from '@/redux/api/services/vehicleAPI';
+import { App, Form, Modal, Input, Radio, Space, Select, Upload, Spin, Tooltip } from 'antd';
 import UploadIllustration from '@/components/upload/upload-illustration';
+import driverAPI from '@/redux/api/services/driverAPI';
+import MapModal from '@/components/GoogleMapIframe/GoogleMaps';
 
-export type VehicleModalProps = {
-   formValue: Vehicle;
+const { Search } = Input;
+
+export type DriverModalProps = {
+   formValue: Driver;
    title: string;
    show: boolean;
    onOk: VoidFunction;
@@ -23,7 +25,7 @@ const getBase64 = (file: RcFile): Promise<string> =>
       reader.onerror = (error) => reject(error);
    });
 
-export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate }: VehicleModalProps) {
+export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }: DriverModalProps) {
    const [form] = Form.useForm();
    const { notification } = App.useApp();
    const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -31,9 +33,12 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
    const [previewImage, setPreviewImage] = useState('');
    const [previewTitle, setPreviewTitle] = useState('');
    const [loading, setLoading] = useState(false);
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [employees, setEmployees] = useState<any[]>([]);
+   const handleOpenModal = () => setIsModalOpen(true);
+   const handleCloseModal = () => setIsModalOpen(false);
 
    const handleCancelUpload = () => setPreviewOpen(false);
-
    const handlePreviewUpload = async (file: UploadFile) => {
       if (!file.url && !file.preview) {
          file.preview = await getBase64(file.originFileObj as RcFile);
@@ -88,6 +93,7 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
                      }
                      return {
                         uid: `${index}`,
+                        name: image.name,
                         status: 'done',
                         originFileObj: image,
                      };
@@ -101,37 +107,38 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
       };
       loadImages();
    }, [show, formValue, form, isCreate]);
+
    const handleOk = () => {
       form
          .validateFields()
          .then((formData) => {
             const additionalData = {
-               vehicleId: formValue.id,
+               driverId: formValue.driver_id,
                images: fileList.map((file) => file.originFileObj),
             };
             const combinedData = { ...formData, ...additionalData };
             if (isCreate) {
                setLoading(true);
-               vehicleAPI
-                  .createVehicle(combinedData)
+               driverAPI
+                  .createDriver(combinedData)
                   .then((res) => {
                      if (res && (res.status === 201 || res.status === 200)) {
                         notification.success({
-                           message: 'Create Vehicle Success !',
+                           message: 'Create Driver Success !',
                            duration: 3,
                         });
                         onOk();
                      }
                      if (res && (res.error === true || res.status === 400 || res.status === 404)) {
                         notification.warning({
-                           message: 'Create Vehicle Failed ! Please try again',
+                           message: 'Create Driver Failed ! Please try again',
                            duration: 3,
                         });
                      }
                   })
                   .catch((error) => {
                      notification.error({
-                        message: `Create Vehicle Failed: ${error.message}`,
+                        message: `Create Driver Failed: ${error.message}`,
                         duration: 3,
                      });
                   })
@@ -141,26 +148,26 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
             } else {
                // Trạng thái cập nhật. isCreate = false
                setLoading(true);
-               vehicleAPI
-                  .updateVehicle(combinedData)
+               driverAPI
+                  .updateDriver(combinedData)
                   .then((res) => {
                      if (res && (res.status === 201 || res.status === 200)) {
                         notification.success({
-                           message: 'Update Vehicle Success !',
+                           message: 'Update Driver Success !',
                            duration: 3,
                         });
                         onOk();
                      }
                      if (res && (res.error === true || res.status === 400 || res.status === 404)) {
                         notification.warning({
-                           message: 'Update Vehicle Failed ! Please try again',
+                           message: 'Update Driver Failed ! Please try again',
                            duration: 3,
                         });
                      }
                   })
                   .catch((error) => {
                      notification.error({
-                        message: `Update Vehicle Failed: ${error.message}`,
+                        message: `Update Driver Failed: ${error.message}`,
                         duration: 3,
                      });
                   })
@@ -170,86 +177,46 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
             }
          })
          .catch((errorInfo) => {
-            if (errorInfo && errorInfo.errorFields) {
-               const errorFields = errorInfo.errorFields.map((field: any) => field.name.join(' '));
-               notification.warning({
-                  message: `Validation Data: \n${errorFields}`,
-                  duration: 3,
-               });
-            } else {
-               // Xử lý lỗi không phải là lỗi xác thực
-               notification.error({
-                  message: `An error occurred: ${errorInfo.message || 'Unknown error'}`,
-                  duration: 3,
-               });
-            }
+            const errorFields = errorInfo.errorFields.map((field: any) => field.name.join(' '));
+            notification.warning({
+               message: `Validation Data: \n${errorFields}`,
+               duration: 3,
+            });
          });
    };
+
    const content = (
-      <Form form={form} layout="vertical" initialValues={formValue} style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-         <Form.Item
-            name="code"
-            label="Vehicle Code"
-            rules={[{ required: true, message: 'Please input vehicle code!' }]}
+      <Form<Driver>
+         initialValues={formValue}
+         form={form}
+         labelCol={{ span: 4 }}
+         wrapperCol={{ span: 18 }}
+         layout="horizontal"
+         style={{ maxHeight: '70vh', overflowY: 'auto' }}
+      >
+         <Form.Item<Driver>
+            label="Driver License Number"
+            name="driver_license_number"
+            rules={[{ required: true, message: 'Please enter the driver license number' }]}
          >
-            <Input placeholder="Enter vehicle code" />
+            <Input size="large" />
          </Form.Item>
-
          <Form.Item
-            name="license_plate"
-            label="License Plate"
-            rules={[{ required: true, message: 'Please input license plate!' }]}
+            name="driver_experience_years"
+            label="Experience Years"
+            rules={[{ required: true, message: 'Please enter the experience years!' }]}
+            style={{ width: '100%' }}
          >
-            <Input placeholder="Enter license plate" />
+            <Input type="number" placeholder="Enter capacity" />
          </Form.Item>
-
-         <Space style={{ width: '100%' }} direction="vertical" size="middle">
-            <Space style={{ width: '100%' }} size="middle">
-               <Form.Item name="model" label="Model" style={{ width: '100%' }}>
-                  <Input placeholder="Enter model" />
-               </Form.Item>
-
-               <Form.Item name="brand" label="Brand" style={{ width: '100%' }}>
-                  <Input placeholder="Enter brand" />
-               </Form.Item>
-            </Space>
-
-            <Space style={{ width: '100%' }} size="middle">
-               <Form.Item
-                  name="capacity"
-                  label="Capacity"
-                  rules={[{ required: true, message: 'Please input capacity!' }]}
-                  style={{ width: '100%' }}
-               >
-                  <Input type="number" placeholder="Enter capacity" />
-               </Form.Item>
-
-               <Form.Item name="manufacture_year" label="Manufacture Year" style={{ width: '100%' }}>
-                  <Input type="number" placeholder="Enter manufacture year" />
-               </Form.Item>
-            </Space>
-         </Space>
-
-         <Form.Item name="color" label="Color">
-            <Input placeholder="Enter color" />
-         </Form.Item>
-
-         <Form.Item name="description" label="Description">
-            <Input.TextArea rows={4} placeholder="Enter description" />
-         </Form.Item>
-
-         <Form.Item
-            name="isLocked"
-            label="Lock Status"
-            rules={[{ required: true, message: 'Please select lock status!' }]}
+         <Form.Item<Driver>
+            label="Employee"
+            name={['driver_onetoOne_employee', 'employee_full_name']}
+            rules={[{ required: true, message: 'Please select an employee' }]}
          >
-            <Radio.Group>
-               <Radio value={1}>Locked</Radio>
-               <Radio value={0}>Unlocked</Radio>
-            </Radio.Group>
+            <Input size="large" placeholder="Employee" />
          </Form.Item>
-
-         <Form.Item label="Images">
+         <Form.Item<Driver> label="Image">
             <Upload
                style={{ flex: 1 }}
                listType="picture-card"
@@ -269,17 +236,23 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
                {fileList.length >= 8 ? null : uploadButton}
             </Upload>
             <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelUpload}>
-               <img alt="preview" style={{ width: '100%' }} src={previewImage} />
+               <img alt="example" style={{ width: '100%' }} src={previewImage} />
             </Modal>
          </Form.Item>
       </Form>
    );
 
    return (
-      <Modal title={title} open={show} onOk={handleOk} onCancel={onCancel} width={720} destroyOnClose>
-         <Spin spinning={loading} tip={isCreate ? 'Creating...' : 'Updating...'}>
+      <>
+         <MapModal isOpen={isModalOpen} onClose={handleCloseModal} onSaveLocation={() => {}} />
+         <Modal title={title} open={show} onOk={handleOk} onCancel={onCancel} destroyOnClose width="60%" centered>
+            {loading && (
+               <Spin size="large" fullscreen tip={isCreate ? 'Creating...' : 'Updating...'}>
+                  {content}
+               </Spin>
+            )}
             {content}
-         </Spin>
-      </Modal>
+         </Modal>
+      </>
    );
 }

@@ -1,6 +1,5 @@
 import { Dayjs } from 'dayjs';
 import { Office } from '../office/entity';
-
 export interface EmployeeType {
    employee_type_id: number;
    employee_type_name: string;
@@ -8,7 +7,6 @@ export interface EmployeeType {
    created_at?: string;
    updated_at?: string;
 }
-
 export interface Employee {
    employee_id: number;
    employee_full_name: string;
@@ -28,11 +26,9 @@ export interface Employee {
    created_at?: string;
    updated_at?: string;
    deleted_at?: string;
-
-   employee_belongto_office?: Office;
-   employee_belongto_employeeType?: EmployeeType;
+   employee_belongto_office?: Office | null;
+   employee_belongto_employeeType?: EmployeeType | null;
 }
-
 // Interface cho Form values
 export interface EmployeeFormValues extends Omit<Employee, 'employee_birthday'> {
    employee_birthday: Dayjs | null;

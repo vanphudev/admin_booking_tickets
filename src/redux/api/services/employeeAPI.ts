@@ -1,80 +1,36 @@
-import { Employee } from '@/pages/management/employee/entity';
-import apiClient from '../apiClient';
+import axios from 'axios';
+import { Employee, EmployeeFormValues } from '@/pages/management/employee/entity';
 
-export enum EmployeeApi {
-   GetEmployees = '/private/employee/auth/getall',
-   CreateEmployee = '/private/employee/auth/create',
-   UpdateEmployee = '/private/employee/auth/update',
-   DeleteEmployee = '/private/employee/auth/delete',
-}
+const API_URL = '/api/employees';
 
-const getEmployees = (): Promise<any> => {
-   return apiClient
-      .get({ url: EmployeeApi.GetEmployees })
-      .then((res: any) => {
-         if (res?.data?.metadata?.employees) {
-            return res.data.metadata.employees;
-         }
-         return null;
-      })
-      .catch((error) => {
-         console.error('Lỗi getEmployees:', error);
-         throw error;
-      });
+const getAllEmployees = async () => {
+   const response = await axios.get(API_URL);
+   return response.data;
 };
 
-const createEmployee = (data: Partial<Employee>) => {
-   return apiClient
-      .post({
-         url: EmployeeApi.CreateEmployee,
-         data,
-      })
-      .then((res) => {
-         if (res?.data?.metadata?.employee) {
-            return res.data.metadata.employee;
-         }
-         return null;
-      })
-      .catch((error) => {
-         console.error('Lỗi createEmployee:', error);
-         throw error;
-      });
+const getEmployeeById = async (employeeId: number) => {
+   const response = await axios.get(`${API_URL}/${employeeId}`);
+   return response.data;
 };
 
-const updateEmployee = (data: Partial<Employee>) => {
-   return apiClient
-      .put({
-         url: `${EmployeeApi.UpdateEmployee}/${data.employee_id}`,
-         data,
-      })
-      .then((res) => {
-         if (res?.data?.metadata?.employee) {
-            return res.data.metadata.employee;
-         }
-         return null;
-      })
-      .catch((error) => {
-         console.error('Lỗi updateEmployee:', error);
-         throw error;
-      });
+const createEmployee = async (data: EmployeeFormValues) => {
+   const response = await axios.post(API_URL, data);
+   return response.data;
 };
 
-const deleteEmployee = (employee_id: number) => {
-   return apiClient
-      .delete({
-         url: `${EmployeeApi.DeleteEmployee}/${employee_id}`,
-      })
-      .then((res) => {
-         return res.data;
-      })
-      .catch((error) => {
-         console.error('Lỗi deleteEmployee:', error);
-         throw error;
-      });
+const updateEmployee = async (employeeId: number, data: EmployeeFormValues) => {
+   const response = await axios.put(`${API_URL}/${employeeId}`, data);
+   return response.data;
+};
+
+const deleteEmployee = async (employeeId: number) => {
+   const response = await axios.delete(`${API_URL}/${employeeId}`);
+   return response.data;
 };
 
 export default {
-   getEmployees,
+   getAllEmployees,
+   getEmployeeById,
    createEmployee,
    updateEmployee,
    deleteEmployee,

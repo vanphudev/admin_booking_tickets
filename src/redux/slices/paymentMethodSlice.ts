@@ -1,6 +1,6 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
 import { PaymentMethod } from '@/pages/management/method-payment/entity';
-import paymentMethodAPI from '../api/services/paymentMethodAPI';
 
 const initialState: {
    paymentMethods: PaymentMethod[];
@@ -12,36 +12,24 @@ const initialState: {
    error: null,
 };
 
-export const fetchPaymentMethods = createAsyncThunk('paymentMethod/getPaymentMethods', async () => {
-   const response = await paymentMethodAPI.getPaymentMethods();
-   return response;
-});
-
 const paymentMethodSlice = createSlice({
-   name: 'paymentMethod',
+   name: 'payment-method',
    initialState,
    reducers: {
-      setPaymentMethods: (state, action: PayloadAction<PaymentMethod[]>) => {
+      setPaymentMethodsSlice: (state, action: PayloadAction<PaymentMethod[]>) => {
          state.paymentMethods = action.payload;
       },
-      clearPaymentMethods: (state) => {
+      clearPaymentMethod: (state) => {
          state.paymentMethods = [];
       },
-   },
-   extraReducers: (builder) => {
-      builder.addCase(fetchPaymentMethods.pending, (state) => {
-         state.loading = true;
-      });
-      builder.addCase(fetchPaymentMethods.fulfilled, (state, action) => {
-         state.paymentMethods = action.payload;
-         state.loading = false;
-      });
-      builder.addCase(fetchPaymentMethods.rejected, (state, action) => {
-         state.error = action.error.message || null;
-         state.loading = false;
-      });
+      setLoading: (state, action: PayloadAction<boolean>) => {
+         state.loading = action.payload;
+      },
+      setError: (state, action: PayloadAction<string | null>) => {
+         state.error = action.payload;
+      },
    },
 });
 
-export const { setPaymentMethods, clearPaymentMethods } = paymentMethodSlice.actions;
+export const { setPaymentMethodsSlice, clearPaymentMethod, setLoading, setError } = paymentMethodSlice.actions;
 export const paymentMethodReducer = paymentMethodSlice.reducer;
