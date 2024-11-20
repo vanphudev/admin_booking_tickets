@@ -1,22 +1,24 @@
-import { Office } from '@/pages/management/office/entity';
+import { Review } from '@/pages/management/review/entity';
 
 import apiClient from '../apiClient';
 
-export enum OfficeApi {
-   GetOffices = 'public/office/getall',
-   CreateOffice = 'private/office/create',
-   UpdateOffice = 'private/office/update',
-   DeleteOffice = 'private/office/delete',
-   UploadImage = 'private/officeimage/create',
-   UpdateImage = 'private/officeimage/update',
+export enum ReviewApi {
+   GetReviews = 'public/review/getall',
+   CreateReviews = 'private/review/create',
+   UpdateReviews = 'private/review/update',
+   DeleteReview = 'private/review/delete',
+   // UploadImage = 'private/reviewimage/create',
+   // UpdateImage = 'private/reviewimage/update',
+   UploadImage = 'private/reviewimage/create',
+   UpdateImage = 'private/reviewimage/update',
 }
 
-const getOffices = (): Promise<any> => {
+const getReviews = (): Promise<any> => {
    return apiClient
-      .get({ url: OfficeApi.GetOffices })
+      .get({ url: ReviewApi.GetReviews })
       .then((res: any) => {
          if (res) {
-            return res.data?.metadata?.offices;
+            return res.data?.metadata?.reviews;
          }
          return null;
       })
@@ -25,15 +27,24 @@ const getOffices = (): Promise<any> => {
          return error;
       });
 };
-
-const createOffice = async (data: Office): Promise<any> => {
+const deleteReview = (review_image_id: string): Promise<any> => {
+   return apiClient
+      .delete({ url: `${ReviewApi.DeleteReview}/${review_image_id}` })
+      .then((res: any) => {
+         return res;
+      })
+      .catch((error) => {
+         return error;
+      });
+};
+const createReview = async (data: Review): Promise<any> => {
    try {
       const res = (await apiClient.post({
-         url: OfficeApi.CreateOffice,
+         url: ReviewApi.CreateReviews,
          data,
       })) as any;
       if (!res || !res.data) {
-         console.error('Response from CreateOffice API is missing or invalid');
+         console.error('Response from CreateOffice API is missing or invalid', res);
          return res;
       }
       const { metadata } = res.data;
@@ -51,7 +62,7 @@ const createOffice = async (data: Office): Promise<any> => {
          data.images.forEach((file) => formData.append('images', file));
          try {
             const uploadRes = await apiClient.post({
-               url: OfficeApi.UploadImage,
+               url: ReviewApi.UploadImage,
                data: formData,
                headers: {
                   'Content-Type': 'multipart/form-data',
@@ -73,21 +84,21 @@ const createOffice = async (data: Office): Promise<any> => {
    }
 };
 
-const updateOffice = async (data: Office): Promise<any> => {
+const updateReview = async (data: Review): Promise<any> => {
    try {
-      const res = (await apiClient.put({ url: OfficeApi.UpdateOffice, data })) as any;
+      const res = (await apiClient.put({ url: ReviewApi.UploadImage, data })) as any;
       if (!res || !res.data) {
          console.error('Response from UpdateOffice API is missing or invalid', res);
          return res;
       }
       const { metadata } = res.data;
-      if (!metadata || !metadata.office) {
+      if (!metadata || !metadata.review) {
          console.warn('Metadata or office information is missing in response', res.data);
          return res;
       }
-      const { office_id: id, office_name: officeName } = metadata.office;
-      if (!id || !officeName) {
-         console.warn('Missing office ID or office name in response', metadata.office);
+      const { id: review_id, rating: review_rating } = metadata.review;
+      if (!review_id || !review_rating) {
+         console.warn('Missing office ID or office name in response', metadata.review);
          return res;
       }
       const formData = new FormData();
@@ -95,12 +106,12 @@ const updateOffice = async (data: Office): Promise<any> => {
       data.images && data.images.forEach((file) => formData.append('images', file));
       try {
          const uploadRes = await apiClient.put({
-            url: OfficeApi.UpdateImage,
+            url: ReviewApi.UpdateImage,
             data: formData,
             headers: {
                'Content-Type': 'multipart/form-data',
-               officeId: id.toString(),
-               officeName: encodeURIComponent(officeName),
+               review_id: review_id.toString(),
+               review_rating: encodeURIComponent(review_rating),
             },
          });
          return { ...res, imageUpload: uploadRes };
@@ -115,23 +126,12 @@ const updateOffice = async (data: Office): Promise<any> => {
    }
 };
 
-const deleteOffice = (id: string): Promise<any> => {
-   return apiClient
-      .delete({ url: `${OfficeApi.DeleteOffice}/${id}` })
-      .then((res: any) => {
-         return res;
-      })
-      .catch((error) => {
-         return error;
-      });
-};
-
-const uploadImage = (id: string, file: File): Promise<any> => {
+const uploadImage = (review_id: string, file: File): Promise<any> => {
    const formData = new FormData();
    formData.append('images', file);
    return apiClient
       .post({
-         url: `${OfficeApi.UploadImage}${id}`,
+         url: `${ReviewApi.UploadImage}${review_id}`,
          data: formData,
          headers: { 'Content-Type': 'multipart/form-data' },
       })
@@ -144,9 +144,9 @@ const uploadImage = (id: string, file: File): Promise<any> => {
 };
 
 export default {
-   getOffices,
-   createOffice,
-   updateOffice,
-   deleteOffice,
+   getReviews,
+   deleteReview,
    uploadImage,
+   updateReview,
+   createReview,
 };

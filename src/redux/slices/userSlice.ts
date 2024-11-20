@@ -1,7 +1,5 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-
-import userAPI from '@/redux/api/services/userAPI';
-
+import * as userAPI from '@/redux/api/services/userAPI';
 import { UserInfo, UserToken } from '#/entity';
 
 export interface UserState {
@@ -13,6 +11,12 @@ const initialState: UserState = {
    userInfo: {},
    userToken: {},
 };
+
+// Tạo async thunk để lấy thông tin người dùng
+export const fetchUserById = createAsyncThunk('user/fetchById', async (id: string) => {
+   const userInfo = await userAPI.getUsersById(id);
+   return userInfo;
+});
 
 const userSlice = createSlice({
    name: 'user',
@@ -32,6 +36,11 @@ const userSlice = createSlice({
          state.userInfo = action.payload.userInfo;
          state.userToken = action.payload.userToken;
       },
+   },
+   extraReducers: (builder) => {
+      builder.addCase(fetchUserById.fulfilled, (state, action) => {
+         state.userInfo = action.payload; // Lưu thông tin người dùng vào state
+      });
    },
 });
 

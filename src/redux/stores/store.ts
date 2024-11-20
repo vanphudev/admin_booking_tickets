@@ -6,8 +6,9 @@ import { userReducer } from '../slices/userSlice';
 import { voucherReducer } from '../slices/voucherSlice';
 import { articleReducer } from '../slices/articleSlice';
 import { articleTypeReducer } from '../slices/articleTypeSlice';
-import employeeReducer from '../slices/employeeSlice';
-import employeeTypeReducer from '../slices/employeeTypeSlice';
+import {employeeReducer} from '../slices/employeeSlice';
+import { employeeTypeReducer } from '../slices/employeeTypeSlice';
+import { reviewReducer } from '../slices/reviewSlice';
 
 export const store = configureStore({
    reducer: {
@@ -19,6 +20,7 @@ export const store = configureStore({
       employee: employeeReducer,
       articleType: articleTypeReducer,
       employeeType: employeeTypeReducer,
+      review: reviewReducer,
    },
 });
 
