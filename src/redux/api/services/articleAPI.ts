@@ -5,7 +5,7 @@ export enum ArticleApi {
    GetArticles = 'private/article/getall',
    CreateArticle = 'private/article/create',
    UpdateArticle = 'private/article/update',
-   DeleteArticle = 'private/article/delete',
+   DeleteArticle = 'private/articleimage/delete',
    UploadImage = 'private/articleimage/create/',
 }
 
@@ -75,9 +75,9 @@ const updateArticle = (data: Article): Promise<any> => {
       });
 };
 
-const deleteArticle = (id: string): Promise<any> => {
+const deleteArticle = (image_article_id: string): Promise<any> => {
    return apiClient
-      .delete({ url: `${ArticleApi.DeleteArticle}/${id}` })
+      .delete({ url: `${ArticleApi.DeleteArticle}/${image_article_id}` })
       .then((res: any) => {
          return res;
       })

@@ -2,10 +2,10 @@ import { Employee } from '@/pages/management/employee/entity';
 import apiClient from '../apiClient';
 
 export enum EmployeeApi {
-   GetEmployees = '/private/employee/auth/getall',
-   CreateEmployee = '/private/employee/auth/create',
-   UpdateEmployee = '/private/employee/auth/update',
-   DeleteEmployee = '/private/employee/auth/delete',
+   GetEmployees = '/private/employee/getall',
+   CreateEmployee = '/private/employee/create',
+   UpdateEmployee = '/private/employee/update',
+   DeleteEmployee = '/private/employee/delete',
 }
 
 const getEmployees = (): Promise<any> => {
@@ -23,24 +23,23 @@ const getEmployees = (): Promise<any> => {
       });
 };
 
-const createEmployee = (data: Partial<Employee>) => {
-   return apiClient
-      .post({
+const createEmployee = async (data: any): Promise<any> => {
+   console.log('Creating employee with data:', data);
+   try {
+      const res = (await apiClient.post({
          url: EmployeeApi.CreateEmployee,
          data,
-      })
-      .then((res) => {
-         if (res?.data?.metadata?.employee) {
-            return res.data.metadata.employee;
-         }
+      })) as any;
+      if (!res || !res.data) {
+         console.error('Response from Create employee API is missing or invalid');
          return null;
-      })
-      .catch((error) => {
-         console.error('Lỗi createEmployee:', error);
-         throw error;
-      });
+      }
+      return res.data;
+   } catch (error) {
+      console.error('Error creating employee:', error.response?.data || error.message);
+      throw error;
+   }
 };
-
 const updateEmployee = (data: Partial<Employee>) => {
    return apiClient
       .put({
@@ -59,20 +58,16 @@ const updateEmployee = (data: Partial<Employee>) => {
       });
 };
 
-const deleteEmployee = (employee_id: number) => {
+const deleteEmployee = (employee_id: string): Promise<any> => {
    return apiClient
-      .delete({
-         url: `${EmployeeApi.DeleteEmployee}/${employee_id}`,
-      })
-      .then((res) => {
-         return res.data;
+      .delete({ url: `${EmployeeApi.DeleteEmployee}/${employee_id}` })
+      .then((res: any) => {
+         return res;
       })
       .catch((error) => {
-         console.error('Lỗi deleteEmployee:', error);
-         throw error;
+         return error;
       });
 };
-
 export default {
    getEmployees,
    createEmployee,

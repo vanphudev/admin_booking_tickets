@@ -1,5 +1,5 @@
 import apiClient from '../apiClient';
-import { EmployeeType } from '@/pages/management/employee/entity';
+import { EmployeeType } from '@/pages/management/employeeType/entity';
 
 export enum EmployeeTypeApi {
    GetAll = '/private/employee-type/getall',
@@ -8,23 +8,19 @@ export enum EmployeeTypeApi {
    Delete = '/private/employee-type/delete',
 }
 
-const getEmployeeTypes = async () => {
-   try {
-      const response = await apiClient.get({ url: EmployeeTypeApi.GetAll });
-      if (response?.data?.metadata?.employeeTypes) {
-         return {
-            success: true,
-            data: response.data.metadata.employeeTypes,
-         };
-      }
-      return {
-         success: false,
-         message: response?.data?.message || 'Không thể lấy danh sách loại nhân viên',
-      };
-   } catch (error: any) {
-      console.error('Lỗi getEmployeeTypes:', error);
-      throw error;
-   }
+const getEmployeeTypes = (): Promise<any> => {
+   return apiClient
+      .get({ url: EmployeeTypeApi.GetAll })
+      .then((res: any) => {
+         if (res?.data?.metadata?.employeeTypes) {
+            return res.data.metadata.employeeTypes;
+         }
+         return null;
+      })
+      .catch((error) => {
+         console.error('Lỗi getEmployeesType:', error);
+         throw error;
+      });
 };
 
 const createEmployeeType = async (data: Omit<EmployeeType, 'employee_type_id' | 'created_at' | 'updated_at'>) => {

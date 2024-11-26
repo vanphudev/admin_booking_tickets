@@ -1,18 +1,40 @@
-import { Button, Card, Popconfirm, App } from 'antd';
+import { Button, Card, Popconfirm, App, Typography, Spin, Empty, Avatar, Alert, Space, InputRef } from 'antd';
+import { TableColumnType, Input } from 'antd';
+import { createStyles } from 'antd-style';
+import type { FilterDropdownProps } from 'antd/es/table/interface';
+import Highlighter from 'react-highlight-words';
 import Table, { ColumnsType } from 'antd/es/table';
 import dayjs from 'dayjs';
-import { useState, useEffect } from 'react';
-
+import { useRef, useState, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { IconButton, Iconify } from '@/components/icon';
 import employeeAPI from '@/redux/api/services/employeeAPI';
 import ProTag from '@/theme/antd/components/tag';
 import { Employee } from './entity';
 import { EmployeeModal } from './employeeModal';
-
+import { setEmployeesSlice } from '@/redux/slices/employeeSlice';
+import { RootState } from '@/redux/stores/store';
+import { SearchOutlined } from '@ant-design/icons';
 const formatDateTime = (value?: string): string => {
    if (!value) return '';
    return dayjs(value).format('DD/MM/YYYY');
 };
+
+const { Text } = Typography;
+const useStyle = createStyles(({ css }) => ({
+   customTable: css`
+      .ant-table {
+         .ant-table-container {
+            .ant-table-body,
+            .ant-table-content {
+               scrollbar-width: thin;
+               scrollbar-color: #939393 transparent;
+               scrollbar-gutter: stable;
+            }
+         }
+      }
+   `,
+}));
 
 const DEFAULT_EMPLOYEE_VALUE: Employee = {
    employee_id: 0,
@@ -24,33 +46,196 @@ const DEFAULT_EMPLOYEE_VALUE: Employee = {
    employee_gender: 1,
    is_first_activation: 1,
    is_locked: 0,
+   last_lock_at: '',
    office_id: 0,
    employee_type_id: 0,
 };
 
+function transformApiResponseToEmployee(apiResponse: any): Employee {
+   return {
+      employee_id: apiResponse.employee_id,
+      employee_full_name: apiResponse.employee_full_name,
+      employee_email: apiResponse.employee_email,
+      employee_phone: apiResponse.employee_phone,
+      employee_username: apiResponse.employee_username,
+      employee_birthday: apiResponse.employee_birthday,
+      employee_gender: apiResponse.employee_gender,
+      is_first_activation: apiResponse.is_first_activation,
+      is_locked: apiResponse.is_locked === 1 ? 1 : 0,
+      last_lock_at: apiResponse.last_lock_at || '',
+      employee_belongto_office: {
+         id: apiResponse.employee_belongto_office?.office_id, // Sử dụng office_id
+         name: apiResponse.employee_belongto_office?.office_name || '', // Sử dụng office_name
+         phone: apiResponse.employee_belongto_office?.office_phone,
+         fax: apiResponse.employee_belongto_office?.office_fax,
+         description: apiResponse.employee_belongto_office?.office_description,
+         latitude: parseFloat(apiResponse.employee_belongto_office?.office_latitude), // Chuyển đổi sang số
+         longitude: parseFloat(apiResponse.employee_belongto_office?.office_longitude), // Chuyển đổi sang số
+         mapUrl: apiResponse.employee_belongto_office?.office_map_url,
+         isLocked: apiResponse.employee_belongto_office?.is_locked === 1 ? 1 : 0,
+         lastLockAt: apiResponse.employee_belongto_office?.last_lock_at || '',
+      },
+      employee_belongto_employeeType: {
+         employee_type_id: apiResponse.employee_belongto_employeeType?.employee_type_id,
+         employee_type_name: apiResponse.employee_belongto_employeeType?.employee_type_name,
+         employee_type_description: apiResponse.employee_belongto_employeeType?.employee_type_description,
+      },
+      created_at: apiResponse.created_at,
+      updated_at: apiResponse.updated_at,
+   };
+}
+type DataIndex = keyof Employee;
+
 export default function EmployeePage() {
+   const { styles } = useStyle();
    const { notification } = App.useApp();
    const [loading, setLoading] = useState(false);
    const [employees, setEmployees] = useState<Employee[]>([]);
+   const [loadingDelete, setLoadingDelete] = useState(false);
+   const [error, setError] = useState(null);
+   const dispatch = useDispatch();
+   const employeesSlice = useSelector((state: RootState) => state.employee.employees);
 
-   const fetchEmployeeList = async () => {
-      setLoading(true);
-      try {
-         const data = await employeeAPI.getEmployees();
-         setEmployees(data || []);
-      } catch (error) {
-         notification.error({
-            message: 'Lỗi khi tải danh sách nhân viên',
-            duration: 3,
-         });
-      } finally {
-         setLoading(false);
-      }
+   const searchInput = useRef<InputRef>(null);
+   const [searchText, setSearchText] = useState('');
+   const [searchedColumn, setSearchedColumn] = useState('');
+   const handleSearch = (selectedKeys: string[], confirm: FilterDropdownProps['confirm'], dataIndex: DataIndex) => {
+      confirm();
+      setSearchText(selectedKeys[0]);
+      setSearchedColumn(dataIndex);
+   };
+   const handleReset = (clearFilters: () => void) => {
+      clearFilters();
+      setSearchText('');
    };
 
+   const getColumnSearchProps = (dataIndex: DataIndex): TableColumnType<Employee> => ({
+      // eslint-disable-next-line react/no-unstable-nested-components
+      filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+         <div style={{ padding: 8 }} onKeyDown={(e) => e.stopPropagation()}>
+            <Input
+               ref={searchInput}
+               placeholder={`Search ${dataIndex}`}
+               value={selectedKeys[0]}
+               onChange={(e) => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+               onPressEnter={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+               style={{ marginBottom: 8, display: 'block' }}
+            />
+            <Space>
+               <Button
+                  type="primary"
+                  onClick={() => handleSearch(selectedKeys as string[], confirm, dataIndex)}
+                  icon={<SearchOutlined />}
+                  size="small"
+                  style={{ width: 90 }}
+               >
+                  Search
+               </Button>
+               <Button onClick={() => clearFilters && handleReset(clearFilters)} size="small" style={{ width: 90 }}>
+                  Reset
+               </Button>
+               <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                     confirm({ closeDropdown: false });
+                     setSearchText((selectedKeys as string[])[0]);
+                     setSearchedColumn(dataIndex);
+                  }}
+               >
+                  Filter
+               </Button>
+               <Button
+                  type="link"
+                  size="small"
+                  onClick={() => {
+                     close();
+                  }}
+               >
+                  close
+               </Button>
+            </Space>
+         </div>
+      ),
+      // eslint-disable-next-line react/no-unstable-nested-components
+      filterIcon: (filtered: boolean) => <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />,
+      onFilter: (value, record) => {
+         const text = record[dataIndex]?.toString().toLowerCase();
+         return text ? text.includes((value as string).toLowerCase()) : false;
+      },
+      onFilterDropdownOpenChange: (visible) => {
+         if (visible) {
+            setTimeout(() => searchInput.current?.select(), 100);
+         }
+      },
+      render: (text) =>
+         searchedColumn === dataIndex ? (
+            <Highlighter
+               highlightStyle={{ backgroundColor: '#ffc069', padding: 0 }}
+               searchWords={[searchText]}
+               autoEscape
+               textToHighlight={text ? text.toString() : ''}
+            />
+         ) : (
+            text
+         ),
+   });
    useEffect(() => {
-      fetchEmployeeList();
-   }, []);
+      setLoading(true);
+      employeeAPI
+         .getEmployees()
+         .then((res: any) => {
+            console.log(res);
+            dispatch(setEmployeesSlice(res.map(transformApiResponseToEmployee)));
+         })
+         .catch((error) => {
+            setError(error);
+         })
+         .finally(() => {
+            setLoading(false);
+         });
+   }, [dispatch]);
+
+   const handleDelete = (employee_id: number) => {
+      setLoadingDelete(true);
+      employeeAPI
+         .deleteEmployee(employee_id.toString())
+         .then((res) => {
+            if (res && res.status === 200) {
+               refreshData();
+               notification.success({
+                  message: `Delete employee Success by Id ${employee_id} !`,
+                  duration: 3,
+               });
+            }
+            if (res && (res.status === 400 || res.error === true)) {
+               notification.error({
+                  message: `Delete employee Failed by Id ${employee_id} !`,
+                  duration: 3,
+                  description: res.message,
+               });
+            }
+         })
+         .catch((error) => {
+            notification.error({
+               message: `Delete Employee Failed by Id ${employee_id} !`,
+               duration: 3,
+               description: error.message,
+            });
+         })
+         .finally(() => {
+            setLoadingDelete(false);
+         });
+   };
+
+   const refreshData = async () => {
+      try {
+         const res = await employeeAPI.getEmployees();
+         dispatch(setEmployeesSlice(res.map(transformApiResponseToEmployee)));
+      } catch (error) {
+         setError(error);
+      }
+   };
 
    const [employeeModalProps, setEmployeeModalProps] = useState({
       formValue: DEFAULT_EMPLOYEE_VALUE,
@@ -59,7 +244,6 @@ export default function EmployeePage() {
       isCreate: true,
       onOk: () => {
          setEmployeeModalProps((prev) => ({ ...prev, show: false }));
-         fetchEmployeeList();
       },
       onCancel: () => {
          setEmployeeModalProps((prev) => ({ ...prev, show: false }));
@@ -68,41 +252,63 @@ export default function EmployeePage() {
 
    const columns: ColumnsType<Employee> = [
       {
-         title: 'Họ và tên',
+         title: 'Full Name',
          dataIndex: 'employee_full_name',
+         ...getColumnSearchProps('employee_full_name'),
          fixed: 'left',
-         width: 200,
+         width: 100,
+         align: 'center',
       },
       {
          title: 'Email',
          dataIndex: 'employee_email',
          width: 200,
+         align: 'center',
       },
       {
-         title: 'Số điện thoại',
+         title: 'Phone Number',
          dataIndex: 'employee_phone',
          width: 120,
+         align: 'center',
       },
       {
-         title: 'Tên đăng nhập',
+         title: 'Username',
          dataIndex: 'employee_username',
          width: 150,
+         align: 'center',
       },
       {
-         title: 'Ngày sinh',
+         title: 'Date of Birth',
          dataIndex: 'employee_birthday',
          width: 120,
+         align: 'center',
          render: (value) => formatDateTime(value),
       },
       {
-         title: 'Giới tính',
+         title: 'Gender',
          dataIndex: 'employee_gender',
          width: 100,
+         align: 'center',
+         filters: [
+            {
+               text: 'Male',
+               value: 1,
+            },
+            {
+               text: 'Female',
+               value: 0,
+            },
+            {
+               text: 'Other',
+               value: -1,
+            },
+         ],
+         onFilter: (value, record) => record.employee_gender === value,
          render: (value) => {
             const genderMap = {
-               1: 'Nam',
-               0: 'Nữ',
-               [-1]: 'Khác',
+               1: 'Male',
+               0: 'Female',
+               [-1]: 'Other',
             };
             return (
                <ProTag color={value === 1 ? 'blue' : value === 0 ? 'pink' : 'default'}>
@@ -112,63 +318,58 @@ export default function EmployeePage() {
          },
       },
       {
-         title: 'Trạng thái',
-         key: 'status',
-         width: 150,
-         render: (_, record) => (
-            <div className="flex gap-2">
-               <ProTag color={record.is_first_activation ? 'warning' : 'success'}>
-                  {record.is_first_activation ? 'Chưa kích hoạt' : 'Đã kích hoạt'}
-               </ProTag>
-               <ProTag color={record.is_locked ? 'error' : 'success'}>
-                  {record.is_locked ? 'Đã khóa' : 'Hoạt động'}
-               </ProTag>
-            </div>
+         title: 'Lock Status',
+         align: 'center',
+         dataIndex: 'isLocked',
+         filters: [
+            {
+               text: 'Locked',
+               value: 1,
+            },
+            {
+               text: 'Unlocked',
+               value: 0,
+            },
+         ],
+         onFilter: (value, record) => record.is_locked === value,
+         render: (isLocked) => (
+            <ProTag color={isLocked === 1 ? 'error' : 'success'}>{isLocked === 1 ? 'Locked' : 'Unlocked'}</ProTag>
          ),
       },
       {
-         title: 'Văn phòng',
-         width: 200,
-         render: (_, record) => record.employee_belongto_office?.office_name,
+         title: 'Offices',
+         width: 100,
+         dataIndex: ['employee_belongto_office', 'name'],
+         ...getColumnSearchProps('employee_belongto_office.name' as DataIndex), // chưa được
+         align: 'center',
       },
       {
-         title: 'Loại nhân viên',
-         width: 150,
-         render: (_, record) => record.employee_belongto_employeeType?.employee_type_name,
+         title: 'Employee Type',
+         width: 100,
+         dataIndex: ['employee_belongto_employeeType', 'employee_type_name'],
+         ...getColumnSearchProps('employee_belongto_employeeType?.empemployee_type_name' as DataIndex), // chưa được
+         align: 'center',
       },
       {
-         title: 'Thời gian',
-         key: 'timestamps',
-         width: 300,
-         render: (_, record) => (
-            <div>
-               <ProTag color="default">Tạo: {formatDateTime(record.created_at)}</ProTag>
-               <ProTag color="default" style={{ marginLeft: 8 }}>
-                  Cập nhật: {formatDateTime(record.updated_at)}
-               </ProTag>
-            </div>
-         ),
-      },
-      {
-         title: 'Thao tác',
+         title: 'Actions',
          key: 'operation',
          fixed: 'right',
          width: 120,
          align: 'center',
          render: (_, record) => (
             <div className="flex w-full justify-center gap-2">
-               <IconButton onClick={() => onEdit(record)}>
+               <IconButton onClick={() => onEdit(record)} title="Edit">
                   <Iconify icon="solar:pen-bold-duotone" size={18} />
                </IconButton>
                <Popconfirm
-                  title="Xóa nhân viên?"
-                  description="Bạn có chắc chắn muốn xóa nhân viên này?"
-                  okText="Xóa"
-                  cancelText="Hủy"
+                  title="Delete employee?"
+                  description="Are you sure you want to delete this employee?"
+                  okText="Delete"
+                  cancelText="Cancel"
                   placement="left"
                   onConfirm={() => handleDelete(record.employee_id)}
                >
-                  <IconButton>
+                  <IconButton title="Delete">
                      <Iconify icon="mingcute:delete-2-fill" size={18} className="text-error" />
                   </IconButton>
                </Popconfirm>
@@ -196,47 +397,91 @@ export default function EmployeePage() {
          formValue,
       }));
    };
-
-   const handleDelete = async (employee_id: number) => {
-      try {
-         await employeeAPI.deleteEmployee(employee_id);
-         notification.success({
-            message: 'Xóa nhân viên thành công',
-            duration: 3,
-         });
-         fetchEmployeeList();
-      } catch (error) {
-         notification.error({
-            message: 'Lỗi khi xóa nhân viên',
-            duration: 3,
-         });
-      }
-   };
+   const expandColumns: ColumnsType<Employee> = [
+      {
+         title: 'Lock Status',
+         align: 'center',
+         key: 'lockStatus',
+         render: (_, record) => {
+            const { is_locked } = record;
+            return (
+               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexDirection: 'column' }}>
+                  {is_locked === 1 ? (
+                     <>
+                        <Iconify icon="fxemoji:lock" size={30} />
+                        <Text mark style={{ color: 'red' }}>
+                           Locked
+                        </Text>
+                     </>
+                  ) : (
+                     <Text mark style={{ color: 'green' }}>
+                        Unlocked
+                     </Text> // Chỉ hiển thị "Unlocked"
+                  )}
+               </div>
+            );
+         },
+      },
+      {
+         title: 'Timestamps',
+         key: 'timestamps',
+         align: 'center',
+         render: (_, record) => (
+            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+               <div style={{ display: 'flex', alignItems: 'center' }}>
+                  <span style={{ marginRight: 8, fontWeight: 'bold' }}>Created Date:</span>
+                  <Text mark>{dayjs(record.created_at, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm:ss')}</Text>
+               </div>
+               <div style={{ display: 'flex', alignItems: 'center', marginTop: 8 }}>
+                  <span style={{ marginRight: 8, fontWeight: 'bold' }}>Updated Date:</span>
+                  <Text mark>{dayjs(record.updated_at, 'YYYY-MM-DD HH:mm:ss').format('DD/MM/YYYY HH:mm:ss')}</Text>
+               </div>
+            </div>
+         ),
+      },
+   ];
+   const renderExpandedRow = (record: Employee) => (
+      <div>
+         {/* <Alert message="Description" description={record.description} type="info" /> */}
+         <Table<Employee> columns={expandColumns} dataSource={[record]} pagination={false} />
+      </div>
+   );
+   const content = (
+      <Table
+         className={styles.customTable}
+         rowKey={(record) => record.employee_id.toString()}
+         style={{ width: '100%', flex: 1 }}
+         size="small"
+         scroll={{ y: 'calc(100vh - 300px)' }}
+         pagination={{
+            size: 'default',
+            total: employees?.length || 0,
+            showSizeChanger: true,
+            showQuickJumper: true,
+            showTotal: (total) => `Total ${total} items`,
+         }}
+         columns={columns as ColumnsType<Employee>}
+         // expandable={{ expandedRowRender: renderExpandedRow, defaultExpandedRowKeys: ['0'] }}
+         dataSource={error ? [] : employeesSlice || []}
+         loading={loading}
+      />
+   );
 
    return (
       <Card
-         title="Danh Sách Nhân Viên"
+         style={{ maxHeight: '100%', minHeight: '100%', display: 'flex', flexDirection: 'column' }}
+         styles={{ body: { padding: '0', flex: 1, display: 'flex', flexDirection: 'column' } }}
+         title="Employee List"
          extra={
             <Button type="primary" onClick={onCreate}>
-               Thêm mới
+               New
             </Button>
          }
       >
-         <Table
-            rowKey="employee_id"
-            size="small"
-            scroll={{ x: 'max-content' }}
-            pagination={{
-               size: 'default',
-               total: employees?.length || 0,
-               showSizeChanger: true,
-               showQuickJumper: true,
-               showTotal: (total) => `Tổng ${total} nhân viên`,
-            }}
-            columns={columns}
-            dataSource={employees}
-            loading={loading}
-         />
+         <Spin spinning={loadingDelete} tip="Deleting..." size="large" fullscreen>
+            {loadingDelete && content}
+         </Spin>
+         {content}
          <EmployeeModal {...employeeModalProps} />
       </Card>
    );
