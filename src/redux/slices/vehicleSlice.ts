@@ -1,46 +1,35 @@
-import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
-import vehicleAPI from '../api/services/vehicleAPI';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+
+import { Vehicle } from '@/pages/management/vehicle/entity';
 
 const initialState: {
-   vehicleTypes: any[];
+   vehicles: Vehicle[];
    loading: boolean;
    error: string | null;
 } = {
-   vehicleTypes: [],
+   vehicles: [],
    loading: false,
    error: null,
 };
 
-export const fetchVehicleTypes = createAsyncThunk('vehicleType/getVehicleTypes', async () => {
-   const response = await vehicleAPI.getVehicles();
-   return response;
-});
-
-const vehicleTypeSlice = createSlice({
-   name: 'vehicleType',
+const vehicleSlice = createSlice({
+   name: 'vehicle',
    initialState,
    reducers: {
-      setVehicleTypes: (state, action: PayloadAction<any[]>) => {
-         state.vehicleTypes = action.payload;
+      setVehiclesSlice: (state, action: PayloadAction<Vehicle[]>) => {
+         state.vehicles = action.payload;
       },
-      clearVehicleTypes: (state) => {
-         state.vehicleTypes = [];
+      clearVehicle: (state) => {
+         state.vehicles = [];
       },
-   },
-   extraReducers: (builder) => {
-      builder.addCase(fetchVehicleTypes.pending, (state) => {
-         state.loading = true;
-      });
-      builder.addCase(fetchVehicleTypes.fulfilled, (state, action) => {
-         state.vehicleTypes = action.payload.data;
-         state.loading = false;
-      });
-      builder.addCase(fetchVehicleTypes.rejected, (state, action) => {
-         state.error = action.error.message || null;
-         state.loading = false;
-      });
+      setLoading: (state, action: PayloadAction<boolean>) => {
+         state.loading = action.payload;
+      },
+      setError: (state, action: PayloadAction<string | null>) => {
+         state.error = action.payload;
+      },
    },
 });
 
-export const { setVehicleTypes, clearVehicleTypes } = vehicleTypeSlice.actions;
-export const vehicleTypeReducer = vehicleTypeSlice.reducer;
+export const { setVehiclesSlice, clearVehicle, setLoading, setError } = vehicleSlice.actions;
+export const vehicleReducer = vehicleSlice.reducer;

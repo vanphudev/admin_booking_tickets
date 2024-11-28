@@ -33,6 +33,8 @@ const createOffice = async (data: Office): Promise<any> => {
          data,
       })) as any;
       if (!res || !res.data) {
+         console.error('Response from CreateOffice API is missing or invalid', res);
+         console.log('Data to create/update vehicle:', data);
          console.error('Response from CreateOffice API is missing or invalid');
          return res;
       }

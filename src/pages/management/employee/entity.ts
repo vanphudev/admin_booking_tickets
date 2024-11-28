@@ -8,6 +8,7 @@ export interface EmployeeType {
    updated_at?: string;
 }
 
+
 // import { Office } from '../office/entity';
 
 export interface Employee {
@@ -29,6 +30,8 @@ export interface Employee {
    created_at?: string;
    updated_at?: string;
    deleted_at?: string;
+   employee_belongto_office?: Office | null;
+   employee_belongto_employeeType?: EmployeeType | null;
    employee_belongto_office?: Office;
    employee_belongto_employeeType?: EmployeeType;
 }
@@ -36,7 +39,6 @@ export interface Employee {
 export interface EmployeeFormValues extends Omit<Employee, 'employee_birthday'> {
    employee_birthday: Dayjs | null;
 }
-
    employee_belongto_office?: {
       id: number; // office_id
       name: string; // office_name

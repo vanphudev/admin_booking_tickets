@@ -1,14 +1,10 @@
-import { PlusOutlined } from '@ant-design/icons';
-import { App, Form, Modal, Input, Radio, InputNumber, Select, Upload } from 'antd';
-import { useEffect, useState } from 'react';
-import { useSelector } from 'react-redux';
-
-import vehicleAPI from '@/redux/api/services/vehicleAPI';
-import { RootState } from '@/redux/stores/store';
-
 import { Vehicle } from './entity';
-
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
+import { useEffect, useState } from 'react';
+import { App, Form, Modal, Input, Radio, Space, Select, Flex, Typography, Upload, Spin, Tooltip } from 'antd';
+import { IconButton, Iconify } from '@/components/icon';
+import vehicleAPI from '@/redux/api/services/vehicleAPI';
+import UploadIllustration from '@/components/upload/upload-illustration';
 
 export type VehicleModalProps = {
    formValue: Vehicle;
@@ -34,11 +30,7 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
    const [previewOpen, setPreviewOpen] = useState(false);
    const [previewImage, setPreviewImage] = useState('');
    const [previewTitle, setPreviewTitle] = useState('');
-
-   const { offices, vehicleTypes } = useSelector((state: RootState) => ({
-      offices: state.office.offices,
-      vehicleTypes: state.vehicleType.vehicleTypes,
-   }));
+   const [loading, setLoading] = useState(false);
 
    const handleCancelUpload = () => setPreviewOpen(false);
 
@@ -46,7 +38,6 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
       if (!file.url && !file.preview) {
          file.preview = await getBase64(file.originFileObj as RcFile);
       }
-
       setPreviewImage(file.url || (file.preview as string));
       setPreviewOpen(true);
       setPreviewTitle(file.name || file.url!.substring(file.url!.lastIndexOf('/') + 1));
@@ -55,194 +46,240 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
    const handleChange: UploadProps['onChange'] = ({ fileList: newFileList }) => setFileList(newFileList);
 
    const uploadButton = (
-      <div>
-         <PlusOutlined />
-         <div style={{ marginTop: 8 }}>Upload</div>
-      </div>
+      <Tooltip placement="top" title="Drop or Select file">
+         <div className="flex flex-col items-center justify-center p-0 opacity-100 hover:opacity-80">
+            <UploadIllustration />
+         </div>
+      </Tooltip>
    );
 
    useEffect(() => {
-      if (show) {
-         form.setFieldsValue(formValue);
-         if (formValue.images && formValue.images.length > 0) {
-            const newFileList = formValue.images.map((image, index) => {
-               const isString = typeof image === 'string';
-               return {
-                  uid: `${index}`,
-                  name: `image${index}.png`,
-                  status: 'done',
-                  url: isString ? image : URL.createObjectURL(image),
-               };
-            });
-            setFileList(newFileList as UploadFile[]);
-         } else {
-            setFileList([]);
+      const loadImages = async () => {
+         if (show) {
+            form.setFieldsValue(formValue);
+            if (formValue.images && formValue.images.length > 0) {
+               const newFileList = await Promise.all(
+                  formValue.images?.map(async (image, index) => {
+                     const isString = typeof image === 'string';
+                     if (isString) {
+                        try {
+                           const response = await fetch(image);
+                           const blob = await response.blob();
+                           const fileType = blob.type;
+                           const fileExtension =
+                              fileType === 'image/svg+xml' ? 'svg' : fileType.split('/')[1] || 'unknown';
+                           const fileName = `image_upload_${index}.${fileExtension}`;
+                           let file;
+                           if (fileType === 'image/svg+xml') {
+                              file = new File([blob], fileName, { type: fileType });
+                           } else {
+                              file = new File([blob], fileName, { type: fileType });
+                           }
+                           return {
+                              uid: `${index}`,
+                              name: fileName,
+                              status: 'done',
+                              originFileObj: file,
+                           };
+                        } catch (error) {
+                           console.error(`Lỗi khi tải file: ${error}`);
+                           return null;
+                        }
+                     }
+                     return {
+                        uid: `${index}`,
+                        status: 'done',
+                        originFileObj: image,
+                     };
+                  }),
+               );
+               setFileList(newFileList as UploadFile[]);
+            } else {
+               setFileList([]);
+            }
          }
-      } else {
-         form.resetFields();
-         setFileList([]);
-      }
-   }, [show, formValue, form]);
-
+      };
+      loadImages();
+   }, [show, formValue, form, isCreate]);
    const handleOk = () => {
       form
          .validateFields()
          .then((formData) => {
-            const submitData = {
-               ...formData,
-               images: fileList,
+            const additionalData = {
+               vehicleId: formValue.id,
+               images: fileList.map((file) => file.originFileObj),
             };
+            const combinedData = { ...formData, ...additionalData };
             if (isCreate) {
-               vehicleAPI.createVehicle(submitData).then((res) => {
-                  if (res && (res.status === 201 || res.status === 200)) {
-                     notification.success({
-                        message: 'Thêm xe thành công!',
+               setLoading(true);
+               vehicleAPI
+                  .createVehicle(combinedData)
+                  .then((res) => {
+                     if (res && (res.status === 201 || res.status === 200)) {
+                        notification.success({
+                           message: 'Create Vehicle Success !',
+                           duration: 3,
+                        });
+                        onOk();
+                     }
+                     if (res && (res.error === true || res.status === 400 || res.status === 404)) {
+                        notification.warning({
+                           message: 'Create Vehicle Failed ! Please try again',
+                           duration: 3,
+                        });
+                     }
+                  })
+                  .catch((error) => {
+                     notification.error({
+                        message: `Create Vehicle Failed: ${error.message}`,
                         duration: 3,
                      });
-                     onOk();
-                  }
-               });
+                  })
+                  .finally(() => {
+                     setLoading(false);
+                  });
             } else {
-               vehicleAPI.updateVehicle(submitData).then((res) => {
-                  if (res && (res.status === 201 || res.status === 200)) {
-                     notification.success({
-                        message: 'Cập nhật xe thành công!',
+               // Trạng thái cập nhật. isCreate = false
+               setLoading(true);
+               vehicleAPI
+                  .updateVehicle(combinedData)
+                  .then((res) => {
+                     if (res && (res.status === 201 || res.status === 200)) {
+                        notification.success({
+                           message: 'Update Vehicle Success !',
+                           duration: 3,
+                        });
+                        onOk();
+                     }
+                     if (res && (res.error === true || res.status === 400 || res.status === 404)) {
+                        notification.warning({
+                           message: 'Update Vehicle Failed ! Please try again',
+                           duration: 3,
+                        });
+                     }
+                  })
+                  .catch((error) => {
+                     notification.error({
+                        message: `Update Vehicle Failed: ${error.message}`,
                         duration: 3,
                      });
-                     onOk();
-                  }
-               });
+                  })
+                  .finally(() => {
+                     setLoading(false);
+                  });
             }
          })
-         .catch((error) => {
-            console.error('Validation Failed:', error);
+         .catch((errorInfo) => {
+            if (errorInfo && errorInfo.errorFields) {
+               const errorFields = errorInfo.errorFields.map((field: any) => field.name.join(' '));
+               notification.warning({
+                  message: `Validation Data: \n${errorFields}`,
+                  duration: 3,
+               });
+            } else {
+               // Xử lý lỗi không phải là lỗi xác thực
+               notification.error({
+                  message: `An error occurred: ${errorInfo.message || 'Unknown error'}`,
+                  duration: 3,
+               });
+            }
          });
    };
+   const content = (
+      <Form form={form} layout="vertical" initialValues={formValue} style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+         <Form.Item
+            name="code"
+            label="Vehicle Code"
+            rules={[{ required: true, message: 'Please input vehicle code!' }]}
+         >
+            <Input placeholder="Enter vehicle code" />
+         </Form.Item>
 
-   const handleCancel = () => {
-      onCancel();
-      setFileList([]);
-   };
+         <Form.Item
+            name="license_plate"
+            label="License Plate"
+            rules={[{ required: true, message: 'Please input license plate!' }]}
+         >
+            <Input placeholder="Enter license plate" />
+         </Form.Item>
+
+         <Space style={{ width: '100%' }} direction="vertical" size="middle">
+            <Space style={{ width: '100%' }} size="middle">
+               <Form.Item name="model" label="Model" style={{ width: '100%' }}>
+                  <Input placeholder="Enter model" />
+               </Form.Item>
+
+               <Form.Item name="brand" label="Brand" style={{ width: '100%' }}>
+                  <Input placeholder="Enter brand" />
+               </Form.Item>
+            </Space>
+
+            <Space style={{ width: '100%' }} size="middle">
+               <Form.Item
+                  name="capacity"
+                  label="Capacity"
+                  rules={[{ required: true, message: 'Please input capacity!' }]}
+                  style={{ width: '100%' }}
+               >
+                  <Input type="number" placeholder="Enter capacity" />
+               </Form.Item>
+
+               <Form.Item name="manufacture_year" label="Manufacture Year" style={{ width: '100%' }}>
+                  <Input type="number" placeholder="Enter manufacture year" />
+               </Form.Item>
+            </Space>
+         </Space>
+
+         <Form.Item name="color" label="Color">
+            <Input placeholder="Enter color" />
+         </Form.Item>
+
+         <Form.Item name="description" label="Description">
+            <Input.TextArea rows={4} placeholder="Enter description" />
+         </Form.Item>
+
+         <Form.Item
+            name="isLocked"
+            label="Lock Status"
+            rules={[{ required: true, message: 'Please select lock status!' }]}
+         >
+            <Radio.Group>
+               <Radio value={1}>Locked</Radio>
+               <Radio value={0}>Unlocked</Radio>
+            </Radio.Group>
+         </Form.Item>
+
+         <Form.Item label="Images">
+            <Upload
+               style={{ flex: 1 }}
+               listType="picture-card"
+               fileList={fileList}
+               multiple
+               beforeUpload={() => false}
+               onPreview={handlePreviewUpload}
+               onChange={handleChange}
+               maxCount={8}
+               progress={{
+                  strokeColor: {
+                     '0%': '#108ee9',
+                     '100%': '#87d068',
+                  },
+               }}
+            >
+               {fileList.length >= 8 ? null : uploadButton}
+            </Upload>
+            <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelUpload}>
+               <img alt="preview" style={{ width: '100%' }} src={previewImage} />
+            </Modal>
+         </Form.Item>
+      </Form>
+   );
 
    return (
-      <>
-         <Modal title={title} open={show} onOk={handleOk} onCancel={handleCancel} width="60%" centered>
-            <Form<Vehicle>
-               form={form}
-               labelCol={{ span: 4 }}
-               wrapperCol={{ span: 18 }}
-               layout="horizontal"
-               style={{ maxHeight: '70vh', overflowY: 'auto' }}
-               initialValues={formValue}
-            >
-               <Form.Item<Vehicle>
-                  label="Mã xe"
-                  name="code"
-                  rules={[{ required: true, message: 'Vui lòng nhập mã xe' }]}
-               >
-                  <Input size="large" />
-               </Form.Item>
-
-               <Form.Item<Vehicle>
-                  label="Biển số"
-                  name="name"
-                  rules={[{ required: true, message: 'Vui lòng nhập biển số xe' }]}
-               >
-                  <Input size="large" />
-               </Form.Item>
-
-               <Form.Item<Vehicle> label="Model" name="model">
-                  <Input size="large" />
-               </Form.Item>
-
-               <Form.Item<Vehicle> label="Hãng xe" name="brand">
-                  <Input size="large" />
-               </Form.Item>
-
-               <Form.Item<Vehicle>
-                  label="Số ghế"
-                  name="capacity"
-                  rules={[{ required: true, message: 'Vui lòng nhập số ghế' }]}
-               >
-                  <InputNumber min={1} className="w-full" size="large" />
-               </Form.Item>
-
-               <Form.Item<Vehicle> label="Năm sản xuất" name="manufactureYear">
-                  <InputNumber min={1800} max={new Date().getFullYear()} className="w-full" size="large" />
-               </Form.Item>
-
-               <Form.Item<Vehicle> label="Màu xe" name="color">
-                  <Input size="large" />
-               </Form.Item>
-
-               <Form.Item<Vehicle>
-                  label="Văn phòng"
-                  name="officeId"
-                  rules={[{ required: true, message: 'Vui lòng chọn văn phòng' }]}
-               >
-                  <Select size="large">
-                     {offices?.map((office: any) => (
-                        <Select.Option key={office.id} value={office.id}>
-                           {office.name}
-                        </Select.Option>
-                     ))}
-                  </Select>
-               </Form.Item>
-
-               <Form.Item<Vehicle>
-                  label="Loại xe"
-                  name="vehicleTypeId"
-                  rules={[{ required: true, message: 'Vui lòng chọn loại xe' }]}
-               >
-                  <Select size="large">
-                     {vehicleTypes?.map((type: any) => (
-                        <Select.Option key={type.id} value={type.id}>
-                           {type.name}
-                        </Select.Option>
-                     ))}
-                  </Select>
-               </Form.Item>
-
-               <Form.Item<Vehicle> label="Mô tả" name="description">
-                  <Input.TextArea size="large" rows={4} />
-               </Form.Item>
-
-               <Form.Item<Vehicle>
-                  label="Trạng thái"
-                  name="isLocked"
-                  rules={[{ required: true, message: 'Vui lòng chọn trạng thái' }]}
-               >
-                  <Radio.Group size="large" optionType="button" buttonStyle="solid">
-                     <Radio value={1}>Khóa</Radio>
-                     <Radio value={0}>Hoạt động</Radio>
-                  </Radio.Group>
-               </Form.Item>
-
-               <Form.Item<Vehicle> label="Hình ảnh">
-                  <Upload
-                     listType="picture-card"
-                     fileList={fileList}
-                     multiple
-                     beforeUpload={() => false}
-                     onPreview={handlePreviewUpload}
-                     onChange={handleChange}
-                     maxCount={8}
-                     progress={{
-                        strokeColor: {
-                           '0%': '#108ee9',
-                           '100%': '#87d068',
-                        },
-                     }}
-                  >
-                     {fileList.length >= 8 ? null : uploadButton}
-                  </Upload>
-               </Form.Item>
-            </Form>
-         </Modal>
-
-         <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelUpload}>
-            <img alt="preview" style={{ width: '100%' }} src={previewImage} />
-         </Modal>
-      </>
+      <Modal title={title} open={show} onOk={handleOk} onCancel={onCancel} width={720} destroyOnClose>
+         <Spin spinning={loading} tip={isCreate ? 'Creating...' : 'Updating...'}>
+            {content}
+         </Spin>
+      </Modal>
    );
 }

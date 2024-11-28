@@ -1,3 +1,19 @@
+import { SearchOutlined } from '@ant-design/icons';
+import { App, Button, Card, Popconfirm, Avatar, Tooltip, Table, Input, Space, Typography, Empty, Spin } from 'antd';
+import { createStyles } from 'antd-style';
+import { useRef, useState, useEffect } from 'react';
+import Highlighter from 'react-highlight-words';
+import { IconButton, Iconify } from '@components/icon';
+import { Employee } from './entity';
+import employeeAPI from '@/redux/api/services/employeeAPI';
+import { EmployeeModal, EmployeeModalProps } from './employeeModal';
+import type { InputRef, TableColumnType } from 'antd';
+import type { ColumnsType } from 'antd/es/table';
+import type { FilterDropdownProps } from 'antd/es/table/interface';
+import { useSelector, useDispatch } from 'react-redux';
+import { RootState } from '@/redux/stores/store';
+import { setEmployeeSlice } from '@/redux/slices/employeeSlice';
+import { useCopyToClipboard } from '@/hooks/event/use-copy-to-clipboard'; // Đảm bảo đường dẫn đúng
 import { useEffect, useState } from 'react';
 import { Button, Table, Space, Popconfirm, App } from 'antd';
 import { EditOutlined, DeleteOutlined, PlusOutlined } from '@ant-design/icons';
@@ -141,6 +157,38 @@ const DEFAULT_EMPLOYEE_VALUE: Employee = {
    employee_email: '',
    employee_phone: '',
    employee_username: '',
+   employee_password: '',
+   employee_gender: 0,
+   is_locked: 0,
+   created_at: '',
+   updated_at: '',
+   employee_belongto_office: null, // Đảm bảo cho phép null
+   employee_belongto_employeeType: null, // Đảm bảo cho phép null
+};
+
+type DataIndex = keyof Employee;
+
+function CopyButton({ value }: { value: string }) {
+   const { copyFn } = useCopyToClipboard();
+   return (
+      <Tooltip title="Copy">
+         <IconButton className="text-gray" onClick={() => copyFn(value)}>
+            <Iconify icon="eva:copy-fill" size={20} />
+         </IconButton>
+      </Tooltip>
+   );
+}
+
+export default function EmployeePage() {
+   const searchInput = useRef<InputRef>(null);
+   const [searchText, setSearchText] = useState('');
+   const [searchedColumn, setSearchedColumn] = useState('');
+   const { notification } = App.useApp();
+   const [loading, setLoading] = useState(true);
+   const [loadingDelete, setLoadingDelete] = useState(false);
+   const [employees, setEmployees] = useState<Employee[]>([]);
+   const dispatch = useDispatch();
+   const employeesSlice = useSelector((state: RootState) => state.employee.employees);
    employee_birthday: '',
    employee_gender: 1,
    is_first_activation: 1,
@@ -279,6 +327,17 @@ export default function EmployeePage() {
             text
          ),
    });
+
+   useEffect(() => {
+      setLoading(true);
+      employeeAPI
+         .getAllEmployees()
+         .then((res: any) => {
+            dispatch(setEmployeeSlice(res));
+            setEmployees(res);
+         })
+         .catch((error) => {
+            console.error('Error fetching employees:', error);
    useEffect(() => {
       setLoading(true);
       employeeAPI
@@ -294,7 +353,16 @@ export default function EmployeePage() {
             setLoading(false);
          });
    }, [dispatch]);
-
+   const handleDelete = (id: number) => {
+      setLoadingDelete(true);
+      employeeAPI
+         .deleteEmployee(id)
+         .then((res) => {
+            if (res && res.status === 200) {
+               setEmployees((prev) => prev.filter((employee) => employee.employee_id !== id));
+               notification.success({
+                  message: `Delete Employee Success by Id ${id} !`,
+                  duration: 3,
    const handleDelete = (employee_id: number) => {
       setLoadingDelete(true);
       employeeAPI
@@ -317,6 +385,7 @@ export default function EmployeePage() {
          })
          .catch((error) => {
             notification.error({
+               message: `Delete Employee Failed by Id ${id} !`,
                message: `Delete Employee Failed by Id ${employee_id} !`,
                duration: 3,
                description: error.message,
@@ -327,6 +396,9 @@ export default function EmployeePage() {
          });
    };
 
+   const [employeeModalProps, setEmployeeModalProps] = useState<EmployeeModalProps>({
+      formValue: { ...DEFAULT_EMPLOYEE_VALUE },
+      title: 'New Create Employee',
    const refreshData = async () => {
       try {
          const res = await employeeAPI.getEmployees();
@@ -343,6 +415,7 @@ export default function EmployeePage() {
       isCreate: true,
       onOk: () => {
          setEmployeeModalProps((prev) => ({ ...prev, show: false }));
+         // Refresh data logic here if needed
       },
       onCancel: () => {
          setEmployeeModalProps((prev) => ({ ...prev, show: false }));
@@ -354,6 +427,7 @@ export default function EmployeePage() {
          title: 'Full Name',
          dataIndex: 'employee_full_name',
          ...getColumnSearchProps('employee_full_name'),
+         sorter: (a, b) => a.employee_full_name.localeCompare(b.employee_full_name),
          fixed: 'left',
          width: 100,
          align: 'center',
@@ -361,6 +435,31 @@ export default function EmployeePage() {
       {
          title: 'Email',
          dataIndex: 'employee_email',
+         ...getColumnSearchProps('employee_email'),
+      },
+      {
+         title: 'Phone',
+         dataIndex: 'employee_phone',
+         render: (phone) => (
+            <Input suffix={<CopyButton value={phone.toString()} />} value={phone.toString()} readOnly />
+         ),
+      },
+      {
+         title: 'Action',
+         key: 'operation',
+         render: (_, record) => (
+            <div className="flex w-full justify-center text-gray">
+               <IconButton onClick={() => onEdit(record)}>
+                  <Iconify icon="solar:pen-bold-duotone" size={18} />
+               </IconButton>
+               <Popconfirm
+                  title="Delete the Employee?"
+                  okText="Yes"
+                  cancelText="No"
+                  placement="left"
+                  onConfirm={() => handleDelete(record.employee_id)}
+               >
+                  <IconButton>
          key: 'employee_email',
       },
       {
@@ -571,6 +670,9 @@ export default function EmployeePage() {
       setEmployeeModalProps((prev) => ({
          ...prev,
          show: true,
+         title: 'Create New Employee',
+         isCreate: true,
+         formValue: { ...DEFAULT_EMPLOYEE_VALUE },
          title: 'Thêm Nhân Viên Mới',
          isCreate: true,
          formValue: DEFAULT_EMPLOYEE_VALUE,
@@ -581,11 +683,30 @@ export default function EmployeePage() {
       setEmployeeModalProps((prev) => ({
          ...prev,
          show: true,
+         title: 'Edit Employee',
          title: 'Chỉnh Sửa Nhân Viên',
          isCreate: false,
          formValue,
       }));
    };
+   return (
+      <Card
+         title="Employee List"
+         extra={
+            <Button type="primary" onClick={onCreate}>
+               New Employee
+            </Button>
+         }
+      >
+         <Spin spinning={loadingDelete} tip="Deleting..." size="large">
+            <Table
+               rowKey="employee_id"
+               columns={columns}
+               dataSource={employeesSlice}
+               pagination={{ pageSize: 10 }}
+               loading={loading}
+            />
+         </Spin>
    const expandColumns: ColumnsType<Employee> = [
       {
          title: 'Lock Status',

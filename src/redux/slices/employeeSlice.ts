@@ -1,3 +1,4 @@
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { notification } from 'antd';
 import { Employee } from '@/pages/management/employee/entity';
@@ -295,6 +296,7 @@ const employeeSlice = createSlice({
    name: 'employee',
    initialState,
    reducers: {
+      setEmployeeSlice: (state, action: PayloadAction<Employee[]>) => {
       setSelectedEmployee: (state, action: PayloadAction<Employee | null>) => {
          state.selectedEmployee = action.payload;
       },
@@ -406,6 +408,6 @@ const employeeSlice = createSlice({
    },
 });
 
-export const { setEmployeesSlice, clearEmployees, setLoading, setError } = employeeSlice.actions;
+export const { setEmployeeSlice, clearEmployees, setLoading, setError } = employeeSlice.actions;
 export const employeeReducer = employeeSlice.reducer;
 

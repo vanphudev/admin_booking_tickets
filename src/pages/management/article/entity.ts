@@ -20,7 +20,7 @@ export interface Article {
       employee_phone?: string;
    };
    article_belongto_articleType?: {
-      article_type_id?: number;
+      article_type_id: number;
       article_title: string;
       article_field?: string;
       is_highlight?: 0 | 1;

@@ -1,3 +1,17 @@
+import { Button, Card, Popconfirm, Image } from 'antd';
+import Table, { ColumnsType } from 'antd/es/table';
+import { useState, useEffect } from 'react';
+import { useDispatch } from 'react-redux';
+import dayjs from 'dayjs';
+
+import { IconButton, Iconify } from '@/components/icon';
+import articleAPI from '@/redux/api/services/articleAPI';
+import { fetchArticleTypes } from '@/redux/slices/articleTypeSlice';
+import ProTag from '@/theme/antd/components/tag';
+
+import { Article } from './entity';
+import { ArticleModal, ArticleModalProps } from './articleModal';
+
 import { Button, Card, Spin, Popconfirm, Image, Empty, Avatar, Tooltip, InputRef, TableColumnType, App } from 'antd';
 import { Space, Input, Alert } from 'antd/lib';
 import Table, { ColumnsType } from 'antd/es/table';
@@ -88,6 +102,7 @@ function transformApiResponseToArticle(apiResponse: any): Article {
          employee_email: apiResponse.article_belongto_employee?.employee_email,
          employee_phone: apiResponse.article_belongto_employee?.employee_phone,
       },
+   };
       // images: apiResponse?.article_to_imageArticle.map((image: any) => image.image_article_url),
    };
 }
@@ -108,7 +123,23 @@ export default function ArticlePage() {
    const [loading, setLoading] = useState(true);
    const [error, setError] = useState(null);
    const [articles, setArticles] = useState<Article[]>([]);
+   useEffect(() => {
+      dispatch(fetchArticleTypes());
+   }, [dispatch]);
 
+   useEffect(() => {
+      articleAPI
+         .getArticles()
+         .then((res: any) => {
+            setArticles(res.data?.metadata?.articles.map(transformApiResponseToArticle));
+            setLoading(false);
+            console.log(res.data?.metadata?.articles);
+         })
+         .catch((error) => {
+            setError(error);
+            setLoading(false);
+         });
+   }, []);
    const searchInput = useRef<InputRef>(null);
    const [searchText, setSearchText] = useState('');
    const [searchedColumn, setSearchedColumn] = useState('');
@@ -283,6 +314,26 @@ export default function ArticlePage() {
    });
    const columns: ColumnsType<Article> = [
       {
+         title: 'Tiêu đề',
+         dataIndex: 'article_title',
+         fixed: 'left',
+         width: 300,
+      },
+      {
+         title: 'Ảnh',
+         dataIndex: 'thumbnail_img',
+         width: 120,
+         render: (thumbnail) =>
+            thumbnail ? (
+               <Image src={thumbnail} alt="Thumbnail" style={{ width: 100, height: 60, objectFit: 'cover' }} />
+            ) : (
+               <ProTag color="default">Không có ảnh</ProTag>
+            ),
+      },
+      {
+         title: 'Loại bài viết',
+   const columns: ColumnsType<Article> = [
+      {
          title: 'Title',
          dataIndex: 'article_title',
          ...getColumnSearchProps('article_title'),
@@ -320,16 +371,45 @@ export default function ArticlePage() {
          width: 150,
       },
       {
+         title: 'Lĩnh vực',
          title: 'Field',
          dataIndex: ['article_belongto_articleType', 'article_field'],
          width: 150,
       },
       {
+         title: 'Người tạo',
          title: 'Creator',
          dataIndex: ['article_belongto_employee', 'employee_full_name'],
          width: 150,
       },
       {
+         title: 'Ưu tiên',
+         dataIndex: 'is_priority',
+         width: 100,
+         render: (priority) => (
+            <ProTag color={priority === 1 ? 'success' : 'default'}>{priority === 1 ? 'Có' : 'Không'}</ProTag>
+         ),
+      },
+      {
+         title: 'Ngày đăng',
+         dataIndex: 'published_at',
+         width: 150,
+         render: (date) => (date ? formatDateTime(date) : 'Chưa đăng'),
+      },
+      {
+         title: 'Ngày tạo',
+         dataIndex: 'created_at',
+         width: 150,
+         render: (date) => formatDateTime(date),
+      },
+      {
+         title: 'Ngày cập nhật',
+         dataIndex: 'updated_at',
+         width: 150,
+         render: (date) => formatDateTime(date),
+      },
+      {
+         title: 'Thao tác',
          title: 'Priority',
          dataIndex: 'is_priority',
          width: 100,
@@ -365,6 +445,10 @@ export default function ArticlePage() {
                   <Iconify icon="solar:pen-bold-duotone" size={18} />
                </IconButton>
                <Popconfirm
+                  title="Xóa bài viết?"
+                  description="Bạn có chắc chắn muốn xóa bài viết này?"
+                  okText="Xóa"
+                  cancelText="Hủy"
                   title="Delete article?"
                   description="Are you sure you want to delete this article?"
                   okText="Delete"
@@ -380,10 +464,25 @@ export default function ArticlePage() {
          ),
       },
    ];
+   const handleDelete = async (id: number) => {
+      try {
+         setLoading(true);
+         await articleAPI.deleteArticle(id);
+         setArticles(articles.filter((article) => article.article_id !== id));
+      } catch (error) {
+         console.error('Lỗi khi xóa bài viết:', error);
+      } finally {
+         setLoading(false);
+      }
+   };
+
    const onCreate = () => {
       setArticleModalProps((prev) => ({
          ...prev,
          show: true,
+         title: 'Tạo bài viết mới',
+         isCreate: true,
+         formValue: DEFAULT_ARTICLE_VALUE,
          title: 'Create New',
          isCreate: true,
          formValue: {
@@ -397,12 +496,37 @@ export default function ArticlePage() {
       setArticleModalProps((prev) => ({
          ...prev,
          show: true,
+         title: 'Chỉnh sửa bài viết',
          title: 'Edit',
          isCreate: false,
          formValue,
       }));
    };
 
+   return (
+      <Card
+         title="Danh sách bài viết"
+         extra={
+            <Button type="primary" onClick={onCreate}>
+               Thêm mới
+            </Button>
+         }
+      >
+         <Table
+            rowKey="article_id"
+            size="small"
+            scroll={{ x: 'max-content' }}
+            pagination={{
+               size: 'default',
+               total: articles?.length || 0,
+               showSizeChanger: true,
+               showQuickJumper: true,
+               showTotal: (total) => `Tổng ${total} bài viết`,
+            }}
+            columns={columns}
+            dataSource={error ? [] : articles}
+            loading={loading}
+         />
   const expandColumns: ColumnsType<Article> = [
       {
          title: 'Lock Status',
