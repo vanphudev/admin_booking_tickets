@@ -1,4 +1,3 @@
-import { Office } from './entity';
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
@@ -8,6 +7,7 @@ import officeAPI from '@/redux/api/services/officeAPI';
 import { RootState } from '@/redux/stores/store';
 import MapModal from '@/components/GoogleMapIframe/GoogleMaps';
 import { setOfficesSlice } from '@/redux/slices/officeSlice';
+import { Office } from './entity';
 
 const { Search } = Input;
 

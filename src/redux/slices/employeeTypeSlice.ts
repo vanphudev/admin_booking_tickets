@@ -1,4 +1,4 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { notification } from 'antd';
 import { EmployeeType } from '@/pages/management/employee/entity';
 import employeeTypeAPI from '../api/services/employeeTypeAPI';
@@ -14,6 +14,15 @@ interface EmployeeTypeState {
 const initialState: EmployeeTypeState = {
    employeeTypes: [],
    selectedEmployeeType: null,
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { EmployeeType } from '@/pages/management/employeeType/entity';
+
+const initialState: {
+   employeeTypes: EmployeeType[];
+   loading: boolean;
+   error: string | null;
+} = {
+   employeeTypes: [],
    loading: false,
    error: null,
 };
@@ -23,10 +32,10 @@ export const fetchEmployeeTypes = createAsyncThunk(
    async (_, { rejectWithValue }) => {
       try {
          const response = await employeeTypeAPI.getEmployeeTypes();
-         if (response.success) {
+         if (response.success && response.data) {
             return response.data;
          }
-         return rejectWithValue(response.message);
+         return rejectWithValue(response.message || 'Không thể lấy danh sách loại nhân viên');
       } catch (error: any) {
          return rejectWithValue(error.message);
       }
@@ -38,8 +47,8 @@ export const createEmployeeType = createAsyncThunk(
    async (data: Omit<EmployeeType, 'employee_type_id' | 'created_at' | 'updated_at'>, { rejectWithValue }) => {
       try {
          const response = await employeeTypeAPI.createEmployeeType(data);
-         if (response.success) {
-            notification.success({ message: 'Tạo loại nhân viên thành công!' });
+         if (response.success && response.data) {
+            notification.success({ message: response.message });
             return response.data;
          }
          return rejectWithValue(response.message);
@@ -54,8 +63,8 @@ export const updateEmployeeType = createAsyncThunk(
    async (data: Partial<EmployeeType> & { employee_type_id: number }, { rejectWithValue }) => {
       try {
          const response = await employeeTypeAPI.updateEmployeeType(data);
-         if (response.success) {
-            notification.success({ message: 'Cập nhật loại nhân viên thành công!' });
+         if (response.success && response.data) {
+            notification.success({ message: response.message });
             return response.data;
          }
          return rejectWithValue(response.message);
@@ -71,7 +80,7 @@ export const deleteEmployeeType = createAsyncThunk(
       try {
          const response = await employeeTypeAPI.deleteEmployeeType(employee_type_id);
          if (response.success) {
-            notification.success({ message: 'Xóa loại nhân viên thành công!' });
+            notification.success({ message: response.message });
             return employee_type_id;
          }
          return rejectWithValue(response.message);
@@ -85,7 +94,7 @@ const employeeTypeSlice = createSlice({
    name: 'employeeType',
    initialState,
    reducers: {
-      setSelectedEmployeeType: (state, action) => {
+      setSelectedEmployeeType: (state, action: PayloadAction<EmployeeType | null>) => {
          state.selectedEmployeeType = action.payload;
       },
       clearSelectedEmployeeType: (state) => {
@@ -169,6 +178,7 @@ const employeeTypeSlice = createSlice({
 
 export const { setSelectedEmployeeType, clearSelectedEmployeeType, clearError } = employeeTypeSlice.actions;
 
+// Selectors
 export const selectEmployeeTypes = (state: RootState) => state.employeeType.employeeTypes;
 export const selectSelectedEmployeeType = (state: RootState) => state.employeeType.selectedEmployeeType;
 export const selectEmployeeTypeLoading = (state: RootState) => state.employeeType.loading;

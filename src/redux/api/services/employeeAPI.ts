@@ -1,3 +1,37 @@
+import axios from 'axios';
+import { Employee, EmployeeFormValues } from '@/pages/management/employee/entity';
+
+const API_URL = '/api/employees';
+
+const getAllEmployees = async () => {
+   const response = await axios.get(API_URL);
+   return response.data;
+};
+
+const getEmployeeById = async (employeeId: number) => {
+   const response = await axios.get(`${API_URL}/${employeeId}`);
+   return response.data;
+};
+
+const createEmployee = async (data: EmployeeFormValues) => {
+   const response = await axios.post(API_URL, data);
+   return response.data;
+};
+
+const updateEmployee = async (employeeId: number, data: EmployeeFormValues) => {
+   const response = await axios.put(`${API_URL}/${employeeId}`, data);
+   return response.data;
+};
+
+const deleteEmployee = async (employeeId: number) => {
+   const response = await axios.delete(`${API_URL}/${employeeId}`);
+   return response.data;
+};
+
+export default {
+   getAllEmployees,
+   getEmployeeById,
+
 import { Employee } from '@/pages/management/employee/entity';
 import apiClient from '../apiClient';
 
@@ -6,6 +40,104 @@ export enum EmployeeApi {
    CreateEmployee = '/private/employee/auth/create',
    UpdateEmployee = '/private/employee/auth/update',
    DeleteEmployee = '/private/employee/auth/delete',
+}
+
+interface ApiResponse<T> {
+   success: boolean;
+   message?: string;
+   metadata?: {
+      employees?: T[];
+      employee?: T;
+   };
+}
+
+interface ApiResult<T> {
+   success: boolean;
+   data?: T;
+   message?: string;
+}
+
+const getEmployees = async (): Promise<ApiResult<Employee[]>> => {
+   try {
+      const response = (await apiClient.get({
+         url: EmployeeApi.GetEmployees,
+      })) as { data: ApiResponse<Employee> };
+
+      return {
+         success: true,
+         data: response.data?.metadata?.employees || [],
+         message: 'Lấy danh sách nhân viên thành công',
+      };
+   } catch (error: any) {
+      return {
+         success: false,
+         message: error.message || 'Không thể lấy danh sách nhân viên',
+      };
+   }
+};
+
+const createEmployee = async (data: Partial<Employee>): Promise<ApiResult<Employee>> => {
+   try {
+      const response = (await apiClient.post({
+         url: EmployeeApi.CreateEmployee,
+         data,
+      })) as { data: ApiResponse<Employee> };
+
+      return {
+         success: true,
+         data: response.data?.metadata?.employee,
+         message: 'Tạo nhân viên thành công',
+      };
+   } catch (error: any) {
+      return {
+         success: false,
+         message: error.message || 'Không thể tạo nhân viên',
+      };
+   }
+};
+
+const updateEmployee = async (data: Partial<Employee>): Promise<ApiResult<Employee>> => {
+   try {
+      const response = (await apiClient.put({
+         url: `${EmployeeApi.UpdateEmployee}/${data.employee_id}`,
+         data,
+      })) as { data: ApiResponse<Employee> };
+
+      return {
+         success: true,
+         data: response.data?.metadata?.employee,
+         message: 'Cập nhật nhân viên thành công',
+      };
+   } catch (error: any) {
+      return {
+         success: false,
+         message: error.message || 'Không thể cập nhật nhân viên',
+      };
+   }
+};
+
+const deleteEmployee = async (employee_id: number): Promise<ApiResult<never>> => {
+   try {
+      const response = (await apiClient.delete({
+         url: `${EmployeeApi.DeleteEmployee}/${employee_id}`,
+      })) as { data: ApiResponse<never> };
+
+      return {
+         success: true,
+         message: 'Xóa nhân viên thành công',
+      };
+   } catch (error: any) {
+      return {
+         success: false,
+         message: error.message || 'Không thể xóa nhân viên',
+      };
+   }
+};
+
+   GetEmployees = '/private/employee/getall',
+   CreateEmployee = '/private/employee/create',
+   UpdateEmployee = '/private/employee/update',
+   DeleteEmployee = '/private/employee/delete',
 }
 
 const getEmployees = (): Promise<any> => {
@@ -23,24 +155,23 @@ const getEmployees = (): Promise<any> => {
       });
 };
 
-const createEmployee = (data: Partial<Employee>) => {
-   return apiClient
-      .post({
+const createEmployee = async (data: any): Promise<any> => {
+   console.log('Creating employee with data:', data);
+   try {
+      const res = (await apiClient.post({
          url: EmployeeApi.CreateEmployee,
          data,
-      })
-      .then((res) => {
-         if (res?.data?.metadata?.employee) {
-            return res.data.metadata.employee;
-         }
+      })) as any;
+      if (!res || !res.data) {
+         console.error('Response from Create employee API is missing or invalid');
          return null;
-      })
-      .catch((error) => {
-         console.error('Lỗi createEmployee:', error);
-         throw error;
-      });
+      }
+      return res.data;
+   } catch (error) {
+      console.error('Error creating employee:', error.response?.data || error.message);
+      throw error;
+   }
 };
-
 const updateEmployee = (data: Partial<Employee>) => {
    return apiClient
       .put({
@@ -59,20 +190,16 @@ const updateEmployee = (data: Partial<Employee>) => {
       });
 };
 
-const deleteEmployee = (employee_id: number) => {
+const deleteEmployee = (employee_id: string): Promise<any> => {
    return apiClient
-      .delete({
-         url: `${EmployeeApi.DeleteEmployee}/${employee_id}`,
-      })
-      .then((res) => {
-         return res.data;
+      .delete({ url: `${EmployeeApi.DeleteEmployee}/${employee_id}` })
+      .then((res: any) => {
+         return res;
       })
       .catch((error) => {
-         console.error('Lỗi deleteEmployee:', error);
-         throw error;
+         return error;
       });
 };
-
 export default {
    getEmployees,
    createEmployee,

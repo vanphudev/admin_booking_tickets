@@ -1,13 +1,17 @@
-import { Vehicle } from './entity';
+import { Review } from './entity';
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { useEffect, useState } from 'react';
+import { useSelector } from 'react-redux';
 import { App, Form, Modal, Input, Radio, Space, Select, Flex, Typography, Upload, Spin, Tooltip } from 'antd';
-import { IconButton, Iconify } from '@/components/icon';
-import vehicleAPI from '@/redux/api/services/vehicleAPI';
 import UploadIllustration from '@/components/upload/upload-illustration';
+import reviewAPI from '@/redux/api/services/reviewAPI';
+import { RootState } from '@/redux/stores/store';
+import { setOfficesSlice } from '@/redux/slices/officeSlice';
 
-export type VehicleModalProps = {
-   formValue: Vehicle;
+const { Search } = Input;
+
+export type ReviewModalProps = {
+   formValue: Review;
    title: string;
    show: boolean;
    onOk: VoidFunction;
@@ -23,7 +27,7 @@ const getBase64 = (file: RcFile): Promise<string> =>
       reader.onerror = (error) => reject(error);
    });
 
-export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate }: VehicleModalProps) {
+export function ReviewModal({ formValue, title, show, onOk, onCancel, isCreate }: ReviewModalProps) {
    const [form] = Form.useForm();
    const { notification } = App.useApp();
    const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -31,9 +35,12 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
    const [previewImage, setPreviewImage] = useState('');
    const [previewTitle, setPreviewTitle] = useState('');
    const [loading, setLoading] = useState(false);
+   const [isModalOpen, setIsModalOpen] = useState(false);
+   const [locationData, setLocationData] = useState<{ lat: number; lng: number; link: string } | null>(null);
 
+   const handleOpenModal = () => setIsModalOpen(true);
+   const handleCloseModal = () => setIsModalOpen(false);
    const handleCancelUpload = () => setPreviewOpen(false);
-
    const handlePreviewUpload = async (file: UploadFile) => {
       if (!file.url && !file.preview) {
          file.preview = await getBase64(file.originFileObj as RcFile);
@@ -88,6 +95,7 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
                      }
                      return {
                         uid: `${index}`,
+                        name: image.name,
                         status: 'done',
                         originFileObj: image,
                      };
@@ -101,37 +109,39 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
       };
       loadImages();
    }, [show, formValue, form, isCreate]);
+
    const handleOk = () => {
       form
          .validateFields()
          .then((formData) => {
             const additionalData = {
-               vehicleId: formValue.id,
+               reviewId: formValue.review_id,
                images: fileList.map((file) => file.originFileObj),
+               map_url: formData.mapUrl,
             };
             const combinedData = { ...formData, ...additionalData };
             if (isCreate) {
                setLoading(true);
-               vehicleAPI
-                  .createVehicle(combinedData)
+               reviewAPI
+                  .createReview(combinedData)
                   .then((res) => {
                      if (res && (res.status === 201 || res.status === 200)) {
                         notification.success({
-                           message: 'Create Vehicle Success !',
+                           message: 'Create review Success !',
                            duration: 3,
                         });
                         onOk();
                      }
                      if (res && (res.error === true || res.status === 400 || res.status === 404)) {
                         notification.warning({
-                           message: 'Create Vehicle Failed ! Please try again',
+                           message: 'Create review Failed ! Please try again',
                            duration: 3,
                         });
                      }
                   })
                   .catch((error) => {
                      notification.error({
-                        message: `Create Vehicle Failed: ${error.message}`,
+                        message: `Create review Failed: ${error.message}`,
                         duration: 3,
                      });
                   })
@@ -141,26 +151,26 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
             } else {
                // Trạng thái cập nhật. isCreate = false
                setLoading(true);
-               vehicleAPI
-                  .updateVehicle(combinedData)
+               reviewAPI
+                  .updateReview(combinedData)
                   .then((res) => {
                      if (res && (res.status === 201 || res.status === 200)) {
                         notification.success({
-                           message: 'Update Vehicle Success !',
+                           message: 'Update review Success !',
                            duration: 3,
                         });
                         onOk();
                      }
                      if (res && (res.error === true || res.status === 400 || res.status === 404)) {
                         notification.warning({
-                           message: 'Update Vehicle Failed ! Please try again',
+                           message: 'Update review Failed ! Please try again',
                            duration: 3,
                         });
                      }
                   })
                   .catch((error) => {
                      notification.error({
-                        message: `Update Vehicle Failed: ${error.message}`,
+                        message: `Update review Failed: ${error.message}`,
                         duration: 3,
                      });
                   })
@@ -170,86 +180,51 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
             }
          })
          .catch((errorInfo) => {
-            if (errorInfo && errorInfo.errorFields) {
-               const errorFields = errorInfo.errorFields.map((field: any) => field.name.join(' '));
-               notification.warning({
-                  message: `Validation Data: \n${errorFields}`,
-                  duration: 3,
-               });
-            } else {
-               // Xử lý lỗi không phải là lỗi xác thực
-               notification.error({
-                  message: `An error occurred: ${errorInfo.message || 'Unknown error'}`,
-                  duration: 3,
-               });
-            }
+            const errorFields = errorInfo.errorFields.map((field: any) => field.name.join(' '));
+            notification.warning({
+               message: `Validation Data: \n${errorFields}`,
+               duration: 3,
+            });
          });
    };
+
    const content = (
-      <Form form={form} layout="vertical" initialValues={formValue} style={{ maxHeight: '70vh', overflowY: 'auto' }}>
-         <Form.Item
-            name="code"
-            label="Vehicle Code"
-            rules={[{ required: true, message: 'Please input vehicle code!' }]}
-         >
-            <Input placeholder="Enter vehicle code" />
+      <Form<Review>
+         initialValues={formValue}
+         form={form}
+         labelCol={{ span: 4 }}
+         wrapperCol={{ span: 18 }}
+         layout="horizontal"
+         style={{ maxHeight: '70vh', overflowY: 'auto' }}
+      >
+         {/* <Form.Item<Review> label="Name" name="name" rules={[{ required: true, message: 'Please enter the name' }]}>
+            <Input size="large" />
          </Form.Item>
-
-         <Form.Item
-            name="license_plate"
-            label="License Plate"
-            rules={[{ required: true, message: 'Please input license plate!' }]}
-         >
-            <Input placeholder="Enter license plate" />
+         <Form.Item<Review> label="Phone" name="phone" rules={[{ required: true, message: 'Please enter the phone number' }]}>
+            <Input size="large" placeholder="Phone" />
          </Form.Item>
-
-         <Space style={{ width: '100%' }} direction="vertical" size="middle">
-            <Space style={{ width: '100%' }} size="middle">
-               <Form.Item name="model" label="Model" style={{ width: '100%' }}>
-                  <Input placeholder="Enter model" />
-               </Form.Item>
-
-               <Form.Item name="brand" label="Brand" style={{ width: '100%' }}>
-                  <Input placeholder="Enter brand" />
-               </Form.Item>
-            </Space>
-
-            <Space style={{ width: '100%' }} size="middle">
-               <Form.Item
-                  name="capacity"
-                  label="Capacity"
-                  rules={[{ required: true, message: 'Please input capacity!' }]}
-                  style={{ width: '100%' }}
-               >
-                  <Input type="number" placeholder="Enter capacity" />
-               </Form.Item>
-
-               <Form.Item name="manufacture_year" label="Manufacture Year" style={{ width: '100%' }}>
-                  <Input type="number" placeholder="Enter manufacture year" />
-               </Form.Item>
-            </Space>
-         </Space>
-
-         <Form.Item name="color" label="Color">
-            <Input placeholder="Enter color" />
+         <Form.Item<Review> label="Fax" name="fax">
+            <Input size="large" placeholder="Fax" />
          </Form.Item>
-
-         <Form.Item name="description" label="Description">
-            <Input.TextArea rows={4} placeholder="Enter description" />
+         <Form.Item<Review> label="Google Maps URL" name="mapUrl" rules={[{ required: true, message: 'Please enter the Google Maps URL' }]}>
+            <Search size="large" addonBefore="https://" onSearch={handleOpenModal} enterButton="Search Map" readOnly />
          </Form.Item>
-
-         <Form.Item
-            name="isLocked"
-            label="Lock Status"
-            rules={[{ required: true, message: 'Please select lock status!' }]}
-         >
-            <Radio.Group>
-               <Radio value={1}>Locked</Radio>
-               <Radio value={0}>Unlocked</Radio>
+         <Form.Item<Review> label="Latitude" name="latitude" rules={[{ required: true, message: 'Please enter the latitude' }]}>
+            <Input size="large" placeholder="Latitude" readOnly />
+         </Form.Item>
+         <Form.Item<Review> label="Longitude" name="longitude" rules={[{ required: true, message: 'Please enter the longitude' }]}>
+            <Input size="large" placeholder="Longitude" readOnly />
+         </Form.Item>
+         <Form.Item<Review> label="Description" name="description" rules={[{ required: true, message: 'Please enter the description' }]}>
+            <Input.TextArea size="large" />
+         </Form.Item>
+         <Form.Item<Review> label="Locked" name="isLocked" rules={[{ required: true, message: 'Please select a status' }]}>
+            <Radio.Group size="large" optionType="button" buttonStyle="solid">
+               <Radio value={1}>Enable</Radio>
+               <Radio value={0}>Disable</Radio>
             </Radio.Group>
          </Form.Item>
-
-         <Form.Item label="Images">
+         <Form.Item<Review> label="Image">
             <Upload
                style={{ flex: 1 }}
                listType="picture-card"
@@ -269,17 +244,33 @@ export function VehicleModal({ formValue, title, show, onOk, onCancel, isCreate 
                {fileList.length >= 8 ? null : uploadButton}
             </Upload>
             <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelUpload}>
-               <img alt="preview" style={{ width: '100%' }} src={previewImage} />
+               <img alt="example" style={{ width: '100%' }} src={previewImage} />
             </Modal>
-         </Form.Item>
+         </Form.Item> */}
       </Form>
-   );
+  );
 
    return (
-      <Modal title={title} open={show} onOk={handleOk} onCancel={onCancel} width={720} destroyOnClose>
-         <Spin spinning={loading} tip={isCreate ? 'Creating...' : 'Updating...'}>
+      <>
+         {/* <MapModal isOpen={isModalOpen} onClose={handleCloseModal} onSaveLocation={handleSaveLocation} /> */}
+         <Modal
+            title={title}
+            open={show}
+            onOk={handleOk}
+            onCancel={() => {
+               onCancel();
+            }}
+            destroyOnClose
+            width="60%"
+            centered
+         >
+            {loading && (
+               <Spin size="large" fullscreen tip={isCreate ? 'Creating...' : 'Updating...'}>
+                  {content}
+               </Spin>
+            )}
             {content}
-         </Spin>
-      </Modal>
+         </Modal>
+      </>
    );
 }
