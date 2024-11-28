@@ -262,6 +262,14 @@ export default function VehiclePage() {
          .then((res) => {
             if (res) {
                dispatch(setVehiclesSlice(res.map(transformApiResponseToVehicle)));
+         .then((response) => {
+            console.log('Response from API:', response);
+            if (response && Array.isArray(response)) {
+               console.log('Setting vehicles:', response);
+               setVehicles(response);
+               console.log('setting ', response);
+            } else {
+               setVehicles([]);
             }
          })
          .catch((error) => {

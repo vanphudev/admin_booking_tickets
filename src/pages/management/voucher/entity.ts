@@ -2,6 +2,8 @@ import { Dayjs } from 'dayjs';
 
 // Interface cho Employee
 export interface Employee {
+// Đổi tên interface từ Employee thành VoucherEmployee
+export interface VoucherEmployee {
    employee_id: number;
    employee_full_name: string;
    employee_email: string;
@@ -21,10 +23,13 @@ export interface Voucher {
    created_at?: string;
    updated_at?: string;
    voucher_belongto_employee?: Employee;
+   voucher_belongto_employee?: VoucherEmployee; // Sử dụng VoucherEmployee thay vì Employee
 }
 
 // Interface cho Form values
 export interface VoucherFormValues extends Omit<Voucher, 'voucher_valid_from' | 'voucher_valid_to'> {
    voucher_valid_from: Dayjs | null;
    voucher_valid_to: Dayjs | null;
+}
+   employee_id?: number;
 }

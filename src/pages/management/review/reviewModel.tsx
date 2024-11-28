@@ -1,15 +1,17 @@
-import { Driver } from './entity';
+import { Review } from './entity';
 import type { RcFile, UploadFile, UploadProps } from 'antd/es/upload/interface';
 import { useEffect, useState } from 'react';
-import { App, Form, Modal, Input, Radio, Space, Select, Upload, Spin, Tooltip } from 'antd';
+import { useSelector } from 'react-redux';
+import { App, Form, Modal, Input, Radio, Space, Select, Flex, Typography, Upload, Spin, Tooltip } from 'antd';
 import UploadIllustration from '@/components/upload/upload-illustration';
-import driverAPI from '@/redux/api/services/driverAPI';
-import MapModal from '@/components/GoogleMapIframe/GoogleMaps';
+import reviewAPI from '@/redux/api/services/reviewAPI';
+import { RootState } from '@/redux/stores/store';
+import { setOfficesSlice } from '@/redux/slices/officeSlice';
 
 const { Search } = Input;
 
-export type DriverModalProps = {
-   formValue: Driver;
+export type ReviewModalProps = {
+   formValue: Review;
    title: string;
    show: boolean;
    onOk: VoidFunction;
@@ -24,27 +26,8 @@ const getBase64 = (file: RcFile): Promise<string> =>
       reader.onload = () => resolve(reader.result as string);
       reader.onerror = (error) => reject(error);
    });
-import { Form, Modal, Input, InputNumber, Select, App } from 'antd';
-import { useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { AppDispatch, RootState } from '@/redux/stores/store';
-import { fetchEmployees } from '@/redux/slices/employeeSlice';
-import { Driver } from './entity';
-import { Employee } from '../employee/entity';
-import driverAPI from '@/redux/api/services/driverAPI';
 
-const { Option } = Select;
-
-interface DriverModalProps {
-   formValue: Driver;
-   title: string;
-   show: boolean;
-   onOk: () => void;
-   onCancel: () => void;
-   isCreate: boolean;
-}
-
-export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }: DriverModalProps) {
+export function ReviewModal({ formValue, title, show, onOk, onCancel, isCreate }: ReviewModalProps) {
    const [form] = Form.useForm();
    const { notification } = App.useApp();
    const [fileList, setFileList] = useState<UploadFile[]>([]);
@@ -53,10 +36,10 @@ export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }
    const [previewTitle, setPreviewTitle] = useState('');
    const [loading, setLoading] = useState(false);
    const [isModalOpen, setIsModalOpen] = useState(false);
-   const [employees, setEmployees] = useState<any[]>([]);
+   const [locationData, setLocationData] = useState<{ lat: number; lng: number; link: string } | null>(null);
+
    const handleOpenModal = () => setIsModalOpen(true);
    const handleCloseModal = () => setIsModalOpen(false);
-
    const handleCancelUpload = () => setPreviewOpen(false);
    const handlePreviewUpload = async (file: UploadFile) => {
       if (!file.url && !file.preview) {
@@ -132,32 +115,33 @@ export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }
          .validateFields()
          .then((formData) => {
             const additionalData = {
-               driverId: formValue.driver_id,
+               reviewId: formValue.review_id,
                images: fileList.map((file) => file.originFileObj),
+               map_url: formData.mapUrl,
             };
             const combinedData = { ...formData, ...additionalData };
             if (isCreate) {
                setLoading(true);
-               driverAPI
-                  .createDriver(combinedData)
+               reviewAPI
+                  .createReview(combinedData)
                   .then((res) => {
                      if (res && (res.status === 201 || res.status === 200)) {
                         notification.success({
-                           message: 'Create Driver Success !',
+                           message: 'Create review Success !',
                            duration: 3,
                         });
                         onOk();
                      }
                      if (res && (res.error === true || res.status === 400 || res.status === 404)) {
                         notification.warning({
-                           message: 'Create Driver Failed ! Please try again',
+                           message: 'Create review Failed ! Please try again',
                            duration: 3,
                         });
                      }
                   })
                   .catch((error) => {
                      notification.error({
-                        message: `Create Driver Failed: ${error.message}`,
+                        message: `Create review Failed: ${error.message}`,
                         duration: 3,
                      });
                   })
@@ -167,26 +151,26 @@ export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }
             } else {
                // Trạng thái cập nhật. isCreate = false
                setLoading(true);
-               driverAPI
-                  .updateDriver(combinedData)
+               reviewAPI
+                  .updateReview(combinedData)
                   .then((res) => {
                      if (res && (res.status === 201 || res.status === 200)) {
                         notification.success({
-                           message: 'Update Driver Success !',
+                           message: 'Update review Success !',
                            duration: 3,
                         });
                         onOk();
                      }
                      if (res && (res.error === true || res.status === 400 || res.status === 404)) {
                         notification.warning({
-                           message: 'Update Driver Failed ! Please try again',
+                           message: 'Update review Failed ! Please try again',
                            duration: 3,
                         });
                      }
                   })
                   .catch((error) => {
                      notification.error({
-                        message: `Update Driver Failed: ${error.message}`,
+                        message: `Update review Failed: ${error.message}`,
                         duration: 3,
                      });
                   })
@@ -205,7 +189,7 @@ export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }
    };
 
    const content = (
-      <Form<Driver>
+      <Form<Review>
          initialValues={formValue}
          form={form}
          labelCol={{ span: 4 }}
@@ -213,29 +197,34 @@ export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }
          layout="horizontal"
          style={{ maxHeight: '70vh', overflowY: 'auto' }}
       >
-         <Form.Item<Driver>
-            label="Driver License Number"
-            name="driver_license_number"
-            rules={[{ required: true, message: 'Please enter the driver license number' }]}
-         >
+         {/* <Form.Item<Review> label="Name" name="name" rules={[{ required: true, message: 'Please enter the name' }]}>
             <Input size="large" />
          </Form.Item>
-         <Form.Item
-            name="driver_experience_years"
-            label="Experience Years"
-            rules={[{ required: true, message: 'Please enter the experience years!' }]}
-            style={{ width: '100%' }}
-         >
-            <Input type="number" placeholder="Enter capacity" />
+         <Form.Item<Review> label="Phone" name="phone" rules={[{ required: true, message: 'Please enter the phone number' }]}>
+            <Input size="large" placeholder="Phone" />
          </Form.Item>
-         <Form.Item<Driver>
-            label="Employee"
-            name={['driver_onetoOne_employee', 'employee_full_name']}
-            rules={[{ required: true, message: 'Please select an employee' }]}
-         >
-            <Input size="large" placeholder="Employee" />
+         <Form.Item<Review> label="Fax" name="fax">
+            <Input size="large" placeholder="Fax" />
          </Form.Item>
-         <Form.Item<Driver> label="Image">
+         <Form.Item<Review> label="Google Maps URL" name="mapUrl" rules={[{ required: true, message: 'Please enter the Google Maps URL' }]}>
+            <Search size="large" addonBefore="https://" onSearch={handleOpenModal} enterButton="Search Map" readOnly />
+         </Form.Item>
+         <Form.Item<Review> label="Latitude" name="latitude" rules={[{ required: true, message: 'Please enter the latitude' }]}>
+            <Input size="large" placeholder="Latitude" readOnly />
+         </Form.Item>
+         <Form.Item<Review> label="Longitude" name="longitude" rules={[{ required: true, message: 'Please enter the longitude' }]}>
+            <Input size="large" placeholder="Longitude" readOnly />
+         </Form.Item>
+         <Form.Item<Review> label="Description" name="description" rules={[{ required: true, message: 'Please enter the description' }]}>
+            <Input.TextArea size="large" />
+         </Form.Item>
+         <Form.Item<Review> label="Locked" name="isLocked" rules={[{ required: true, message: 'Please select a status' }]}>
+            <Radio.Group size="large" optionType="button" buttonStyle="solid">
+               <Radio value={1}>Enable</Radio>
+               <Radio value={0}>Disable</Radio>
+            </Radio.Group>
+         </Form.Item>
+         <Form.Item<Review> label="Image">
             <Upload
                style={{ flex: 1 }}
                listType="picture-card"
@@ -257,14 +246,24 @@ export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }
             <Modal open={previewOpen} title={previewTitle} footer={null} onCancel={handleCancelUpload}>
                <img alt="example" style={{ width: '100%' }} src={previewImage} />
             </Modal>
-         </Form.Item>
+         </Form.Item> */}
       </Form>
-   );
+  );
 
    return (
       <>
-         <MapModal isOpen={isModalOpen} onClose={handleCloseModal} onSaveLocation={() => {}} />
-         <Modal title={title} open={show} onOk={handleOk} onCancel={onCancel} destroyOnClose width="60%" centered>
+         {/* <MapModal isOpen={isModalOpen} onClose={handleCloseModal} onSaveLocation={handleSaveLocation} /> */}
+         <Modal
+            title={title}
+            open={show}
+            onOk={handleOk}
+            onCancel={() => {
+               onCancel();
+            }}
+            destroyOnClose
+            width="60%"
+            centered
+         >
             {loading && (
                <Spin size="large" fullscreen tip={isCreate ? 'Creating...' : 'Updating...'}>
                   {content}
@@ -273,102 +272,5 @@ export function DriverModal({ formValue, title, show, onOk, onCancel, isCreate }
             {content}
          </Modal>
       </>
-   const dispatch = useDispatch<AppDispatch>();
-
-   const employees = useSelector((state: RootState) => state.employee.employees);
-   const employeeLoading = useSelector((state: RootState) => state.employee.loading);
-
-   useEffect(() => {
-      if (show) {
-         dispatch(fetchEmployees());
-      }
-   }, [dispatch, show]);
-
-   useEffect(() => {
-      if (!show) {
-         form.resetFields();
-      }
-   }, [show, form]);
-
-   useEffect(() => {
-      if (show && formValue) {
-         form.setFieldsValue({
-            employee_id: formValue.employee_id,
-            driver_license_number: formValue.driver_license_number,
-            driver_experience_years: formValue.driver_experience_years,
-         });
-      }
-   }, [show, formValue, form]);
-
-   const handleOk = async () => {
-      try {
-         const values = await form.validateFields();
-
-         if (isCreate) {
-            const response = await driverAPI.createDriver(values);
-            if (response.success) {
-               notification.success({
-                  message: 'Tạo tài xế thành công!',
-               });
-               onOk();
-            }
-         } else {
-            const response = await driverAPI.updateDriver({
-               ...values,
-               driver_id: formValue.driver_id,
-            });
-            if (response.success) {
-               notification.success({
-                  message: 'Cập nhật tài xế thành công!',
-               });
-               onOk();
-            }
-         }
-      } catch (error: any) {
-         notification.error({
-            message: 'Có lỗi xảy ra!',
-            description: error.message,
-         });
-      }
-   };
-
-   return (
-      <Modal title={title} open={show} onOk={handleOk} onCancel={onCancel} width="60%" centered maskClosable={false}>
-         <Form form={form} layout="horizontal" labelCol={{ span: 6 }} wrapperCol={{ span: 16 }}>
-            <Form.Item
-               label="Nhân viên"
-               name="employee_id"
-               rules={[{ required: true, message: 'Vui lòng chọn nhân viên!' }]}
-            >
-               <Select placeholder="Chọn nhân viên" loading={employeeLoading} disabled={!isCreate}>
-                  {employees?.map((employee: Employee) => (
-                     <Option
-                        key={employee.employee_id}
-                        value={employee.employee_id}
-                        disabled={employee.is_locked === 1}
-                     >
-                        {employee.employee_full_name} - {employee.employee_email}
-                     </Option>
-                  ))}
-               </Select>
-            </Form.Item>
-
-            <Form.Item
-               label="Số GPLX"
-               name="driver_license_number"
-               rules={[{ required: true, message: 'Vui lòng nhập số GPLX!' }]}
-            >
-               <Input placeholder="Nhập số giấy phép lái xe" />
-            </Form.Item>
-
-            <Form.Item
-               label="Kinh nghiệm (năm)"
-               name="driver_experience_years"
-               rules={[{ required: true, message: 'Vui lòng nhập số năm kinh nghiệm!' }]}
-            >
-               <InputNumber placeholder="Nhập số năm kinh nghiệm" style={{ width: '100%' }} min={0} />
-            </Form.Item>
-         </Form>
-      </Modal>
    );
 }
