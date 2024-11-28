@@ -7,7 +7,13 @@ export default function UploadIllustration() {
       colorPrimaryTextActive: PRIMARY_DARKER,
    } = useThemeToken();
    return (
-      <svg className="MuiBox-root css-olkjfu" viewBox="0 0 480 360" xmlns="http://www.w3.org/2000/svg">
+      <svg
+         className="MuiBox-root css-olkjfu"
+         viewBox="0 0 480 360"
+         xmlns="http://www.w3.org/2000/svg"
+         width="80%"
+         height="80%"
+      >
          <defs>
             <linearGradient id="BG" x1="19.496%" x2="77.479%" y1="71.822%" y2="16.69%">
                <stop offset="0%" stopColor={PRIMARY_MAIN} />

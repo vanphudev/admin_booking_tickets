@@ -7,6 +7,12 @@ import { paymentMethodReducer } from '../slices/paymentMethodSlice';
 import employeeReducer from '../slices/employeeSlice';
 import employeeTypeReducer from '../slices/employeeTypeSlice';
 import driverReducer from '../slices/driverSlice';
+import { voucherReducer } from '../slices/voucherSlice';
+import { articleReducer } from '../slices/articleSlice';
+import { articleTypeReducer } from '../slices/articleTypeSlice';
+import {employeeReducer} from '../slices/employeeSlice';
+import { employeeTypeReducer } from '../slices/employeeTypeSlice';
+import { reviewReducer } from '../slices/reviewSlice';
 
 export const store = configureStore({
    reducer: {
@@ -18,10 +24,14 @@ export const store = configureStore({
       driver: driverReducer,
       employee: employeeReducer,
       employeeType: employeeTypeReducer,
+     voucher: voucherReducer,
+      article: articleReducer,
+      employee: employeeReducer,
+      articleType: articleTypeReducer,
+      employeeType: employeeTypeReducer,
+      review: reviewReducer,
    },
 });
 
 export type RootState = ReturnType<typeof store.getState>;
 export type AppDispatch = typeof store.dispatch;
-
-export default store;

@@ -17,7 +17,6 @@
       "noEmit": true,
       "jsx": "react-jsx",
       "esModuleInterop": true,
-
       "strict": true,
       "strictNullChecks": true,
       "noImplicitAny": true,
@@ -29,7 +28,14 @@
       "baseUrl": ".",
       "paths": {
          "@/*": ["src/*"],
-         "#/*": ["types/*"]
+         "#/*": ["types/*"],
+         "@api/*": ["src/redux/api/services/*"],
+         "@pages/*": ["src/pages/*"],
+         "@components/*": ["src/components/*"],
+         "@theme/*": ["src/theme/*"],
+         "@store/*": ["src/redux/stores/*"],
+         "@utils/*": ["src/utils/*"],
+         "@slice/*": ["src/redux/slices/*"]
       }
    },
    "include": ["src", "types"],

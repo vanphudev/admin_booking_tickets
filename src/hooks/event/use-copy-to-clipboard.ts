@@ -16,7 +16,7 @@ export function useCopyToClipboard(): ReturnType {
    const [copiedText, setCopiedText] = useState<CopiedValue>(null);
    const { notification } = App.useApp();
 
-   const copyFn: CopyFn = async (text) => {
+   const copyFn: CopyFn = async (text: string) => {
       if (!navigator?.clipboard) {
          console.warn('Clipboard not supported');
          return false;
@@ -27,7 +27,7 @@ export function useCopyToClipboard(): ReturnType {
          await navigator.clipboard.writeText(text);
          setCopiedText(text);
          notification.success({
-            message: 'Copied!',
+            message: `Copied! - ${text}`,
          });
          return true;
       } catch (error) {

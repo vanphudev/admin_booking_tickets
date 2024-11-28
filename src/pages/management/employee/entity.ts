@@ -7,6 +7,9 @@ export interface EmployeeType {
    created_at?: string;
    updated_at?: string;
 }
+
+// import { Office } from '../office/entity';
+
 export interface Employee {
    employee_id: number;
    employee_full_name: string;
@@ -29,6 +32,37 @@ export interface Employee {
    employee_belongto_office?: Office;
    employee_belongto_employeeType?: EmployeeType;
 }
+// Interface cho Form values
+export interface EmployeeFormValues extends Omit<Employee, 'employee_birthday'> {
+   employee_birthday: Dayjs | null;
+}
+
+   employee_belongto_office?: {
+      id: number; // office_id
+      name: string; // office_name
+      phone?: string; // office_phone
+      fax?: string; // office_fax
+      description?: string; // office_description
+      latitude?: number; // office_latitude
+      longitude?: number; // office_longitude
+      mapUrl?: string; // office_map_url
+      isLocked?: 0 | 1; // is_locked
+      lastLockAt?: string | null; // last_lock_at
+      Address?: {
+         province: string | null;
+         district: string | null;
+         ward: string | null;
+         street: string | null;
+      };
+      images?: File[];
+   };
+   employee_belongto_employeeType?: {
+      employee_type_id: number;
+      employee_type_name: string;
+      employee_type_description?: string;
+};
+}
+
 // Interface cho Form values
 export interface EmployeeFormValues extends Omit<Employee, 'employee_birthday'> {
    employee_birthday: Dayjs | null;

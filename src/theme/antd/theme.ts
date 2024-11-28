@@ -9,9 +9,7 @@ const customThemeTokenConfig: ThemeConfig['token'] = {
    colorWarning: '#ff7849',
    colorError: '#ff5630',
    colorInfo: '#00b8d9',
-
    wireframe: false,
-
    borderRadiusSM: 2,
    borderRadius: 4,
    borderRadiusLG: 8,
@@ -21,6 +19,17 @@ const customComponentConfig: ThemeConfig['components'] = {
    Breadcrumb: {
       fontSize: 12,
       separatorMargin: 4,
+   },
+   Table: {
+      borderRadius: 8,
+   },
+   Modal: {
+      borderRadius: 8,
+      motionDurationMid: '0.125s',
+      motionDurationSlow: '0.125s',
+   },
+   Card: {
+      borderRadius: 8,
    },
    Menu: {
       fontSize: 14,

@@ -1,26 +1,26 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
-import { Office } from '@/pages/management/office/entity';
+import { Review } from '@/pages/management/review/entity';
 
 const initialState: {
-   offices: Office[];
+   reviews: Review[];
    loading: boolean;
    error: string | null;
 } = {
-   offices: [],
+   reviews: [],
    loading: false,
    error: null,
 };
 
-const officeSlice = createSlice({
-   name: 'office',
+const reviewSlice = createSlice({
+   name: 'review',
    initialState,
    reducers: {
-      setOfficesSlice: (state, action: PayloadAction<Office[]>) => {
-         state.offices = action.payload;
+      setReviewsSlice: (state, action: PayloadAction<Review[]>) => {
+         state.reviews = action.payload;
       },
-      clearOffices: (state) => {
-         state.offices = [];
+      clearReviews: (state) => {
+         state.reviews = [];
       },
       setLoading: (state, action: PayloadAction<boolean>) => {
          state.loading = action.payload;
@@ -31,5 +31,5 @@ const officeSlice = createSlice({
    },
 });
 
-export const { setOfficesSlice, clearOffices, setLoading, setError } = officeSlice.actions;
-export const officeReducer = officeSlice.reducer;
+export const { setReviewsSlice, clearReviews, setLoading, setError } = reviewSlice.actions;
+export const reviewReducer = reviewSlice.reducer;
