@@ -1,5 +1,9 @@
 import { createSlice, PayloadAction, createAsyncThunk } from '@reduxjs/toolkit';
+
+import { UserApi } from '../api/services/userAPI';
+
 import * as userAPI from '@/redux/api/services/userAPI';
+
 import { UserInfo, UserToken } from '#/entity';
 
 export interface UserState {

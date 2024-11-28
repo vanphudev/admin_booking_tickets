@@ -1,8 +1,12 @@
 import { configureStore } from '@reduxjs/toolkit';
-
 import { addressReducer } from '../slices/adressSlice';
 import { officeReducer } from '../slices/officeSlice';
 import { userReducer } from '../slices/userSlice';
+import { vehicleTypeReducer } from '../slices/vehicleSlice';
+import { paymentMethodReducer } from '../slices/paymentMethodSlice';
+import employeeReducer from '../slices/employeeSlice';
+import employeeTypeReducer from '../slices/employeeTypeSlice';
+import driverReducer from '../slices/driverSlice';
 import { voucherReducer } from '../slices/voucherSlice';
 import { articleReducer } from '../slices/articleSlice';
 import { articleTypeReducer } from '../slices/articleTypeSlice';
@@ -15,7 +19,12 @@ export const store = configureStore({
       user: userReducer,
       office: officeReducer,
       address: addressReducer,
-      voucher: voucherReducer,
+      vehicleType: vehicleTypeReducer,
+      paymentMethod: paymentMethodReducer,
+      driver: driverReducer,
+      employee: employeeReducer,
+      employeeType: employeeTypeReducer,
+     voucher: voucherReducer,
       article: articleReducer,
       employee: employeeReducer,
       articleType: articleTypeReducer,

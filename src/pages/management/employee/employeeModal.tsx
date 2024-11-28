@@ -1,4 +1,15 @@
 import { Form, Modal, Input, Select, DatePicker, App } from 'antd';
+import { useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
+import { ThunkDispatch } from '@reduxjs/toolkit';
+import { AnyAction } from 'redux';
+import dayjs from 'dayjs';
+
+import { RootState } from '@/redux/stores/store';
+import employeeAPI from '@/redux/api/services/employeeAPI';
+import { fetchOffices } from '@/redux/slices/officeSlice';
+import { fetchEmployeeTypes } from '@/redux/slices/employeeTypeSlice';
+import { Employee, EmployeeFormValues } from './entity';
 import { useEffect, useState } from 'react';
 import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
@@ -12,6 +23,7 @@ import { setOfficesSlice } from '@/redux/slices/officeSlice';
 import { setEmployeeTypesSlice } from '@/redux/slices/employeeTypeSlice';
 import { Office } from '@pages/management/office/entity';
 import { EmployeeType } from '../employeeType/entity';
+
 const { Option } = Select;
 
 interface EmployeeModalProps {
@@ -22,6 +34,20 @@ interface EmployeeModalProps {
    onCancel: () => void;
    isCreate: boolean;
 }
+
+type AppThunkDispatch = ThunkDispatch<RootState, any, AnyAction>;
+
+export function EmployeeModal({ 
+   formValue, 
+   title, 
+   show, 
+   onOk, 
+   onCancel, 
+   isCreate 
+}: EmployeeModalProps) {
+   const [form] = Form.useForm<EmployeeFormValues>();
+   const { notification } = App.useApp();
+   const dispatch = useDispatch<AppThunkDispatch>();
 
 export function EmployeeModal({ formValue, title, show, onOk, onCancel, isCreate }: EmployeeModalProps) {
    const [form] = Form.useForm<EmployeeFormValues>();
@@ -34,6 +60,10 @@ export function EmployeeModal({ formValue, title, show, onOk, onCancel, isCreate
    const { employeeTypes, loading: typeLoading } = useSelector((state: RootState) => state.employeeType);
 
    // Fetch data khi mở modal
+   useEffect(() => {
+      if (show) {
+         dispatch(fetchEmployeeTypes());
+         dispatch(fetchOffices());
    // useEffect(() => {
    //    if (show) {
    //       dispatch(fetchOffices());
@@ -108,10 +138,17 @@ export function EmployeeModal({ formValue, title, show, onOk, onCancel, isCreate
          });
       }
    }, [show, formValue, form]);
+
    const handleOk = async () => {
       try {
          const values = await form.validateFields();
          const submitData = {
+            ...values,
+            employee_birthday: values.employee_birthday?.format('YYYY-MM-DD'),
+         };
+
+         if (isCreate) {
+            const response = await employeeAPI.createEmployee(submitData);
             // ...values,
             // employee_birthday: values.employee_birthday?.format('YYYY-MM-DD'),
             employee_full_name: values.employee_full_name,
@@ -170,6 +207,12 @@ export function EmployeeModal({ formValue, title, show, onOk, onCancel, isCreate
          maskClosable={false}
          confirmLoading={officeLoading || typeLoading}
       >
+         <Form<EmployeeFormValues>
+            form={form}
+            layout="horizontal"
+            labelCol={{ span: 6 }}
+            wrapperCol={{ span: 16 }}
+         >
          <Form<EmployeeFormValues> form={form} layout="horizontal" labelCol={{ span: 6 }} wrapperCol={{ span: 16 }}>
             <Form.Item
                label="Họ và tên"
@@ -255,6 +298,37 @@ export function EmployeeModal({ formValue, title, show, onOk, onCancel, isCreate
             </Form.Item>
 
             <Form.Item
+               label="Văn phòng"
+               name="office_id"
+               rules={[{ required: true, message: 'Vui lòng chọn văn phòng!' }]}
+            >
+               <Select 
+                  placeholder="Chọn văn phòng"
+                  loading={officeLoading}
+               >
+                  {offices?.map((office) => (
+                     <Option key={office.id} value={office.id}>
+                        {office.name}
+                     </Option>
+                  ))}
+               </Select>
+            </Form.Item>
+
+            <Form.Item
+               label="Loại nhân viên"
+               name="employee_type_id"
+               rules={[{ required: true, message: 'Vui lòng chọn loại nhân viên!' }]}
+            >
+               <Select 
+                  placeholder="Chọn loại nhân viên"
+                  loading={typeLoading}
+               >
+                  {employeeTypes?.map((type) => (
+                     <Option key={type.employee_type_id} value={type.employee_type_id}>
+                        {type.employee_type_name}
+                     </Option>
+                  ))}
+               </Select>
                label="Office"
                name="office_id"
                rules={[{ required: true, message: 'Vui lòng chọn loại bài viết!' }]}

@@ -65,6 +65,7 @@ export default function VehiclePage() {
             if (response && Array.isArray(response)) {
                console.log('Setting vehicles:', response);
                setVehicles(response);
+               console.log('setting ', response);
             } else {
                setVehicles([]);
             }
